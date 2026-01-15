@@ -1,4 +1,4 @@
-package com.example.backendchat.api;
+package com.example.backendchatwebsocket.adapters.inbound.rest;
 
 import com.example.backendchat.api.model.PingResponse;
 import org.springframework.http.ResponseEntity;
