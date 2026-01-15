@@ -44,7 +44,7 @@ openApiGenerate {
     invokerPackage = 'com.example.backendchat.api.invoker'
     configOptions = [
         useSpringBoot3: 'true',
-        interfaceOnly : 'false',
+        interfaceOnly : 'true',
         delegatePattern: 'true',
         useTags: 'true',
         openApiNullable: 'false'
