@@ -1,4 +1,4 @@
-package com.example.backendchatwebsocket.adapters;
+package com.example.backendchatwebsocket.adapters.outbound.persistence;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

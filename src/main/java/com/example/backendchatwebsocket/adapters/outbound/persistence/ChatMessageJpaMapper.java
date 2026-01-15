@@ -1,8 +1,8 @@
-package com.example.backendchatwebsocket.adapters;
+package com.example.backendchatwebsocket.adapters.outbound.persistence;
 
-import com.example.backendchatwebsocket.domain.ChatMessage;
-import com.example.backendchatwebsocket.domain.MessageId;
-import com.example.backendchatwebsocket.domain.UserId;
+import com.example.backendchatwebsocket.domain.model.ChatMessage;
+import com.example.backendchatwebsocket.domain.model.MessageId;
+import com.example.backendchatwebsocket.domain.model.UserId;
 
 public class ChatMessageJpaMapper {
 

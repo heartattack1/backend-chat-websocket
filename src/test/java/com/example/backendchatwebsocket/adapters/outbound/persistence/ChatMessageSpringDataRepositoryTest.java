@@ -1,10 +1,7 @@
-package com.example.backendchatwebsocket.adapters;
+package com.example.backendchatwebsocket.adapters.outbound.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.example.backendchatwebsocket.domain.ChatMessage;
-import com.example.backendchatwebsocket.domain.MessageId;
-import com.example.backendchatwebsocket.domain.UserId;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -14,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -23,7 +21,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @DataJpaTest
 @Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class JpaChatMessageRepositoryAdapterTest {
+class ChatMessageSpringDataRepositoryTest {
 
     @Container
     private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
@@ -36,33 +34,34 @@ class JpaChatMessageRepositoryAdapterTest {
     }
 
     @Autowired
-    private ChatMessageSpringDataRepository chatMessageSpringDataRepository;
+    private ChatMessageSpringDataRepository repository;
 
     @Autowired
     private UserJpaRepository userJpaRepository;
 
     @Test
-    void findsLastMessagesInChronologicalOrder() {
+    void findsMessagesOrderedByCreatedAtAndIdDesc() {
         UserEntity user = buildUser();
         userJpaRepository.save(user);
-        JpaChatMessageRepositoryAdapter adapter = new JpaChatMessageRepositoryAdapter(chatMessageSpringDataRepository);
 
-        ChatMessage first = message("01J2M5Z8V6H4C4B9QF6XH1T2Z1", user.getId(), "first", Instant.parse("2025-01-01T00:00:00Z"));
-        ChatMessage second = message("01J2M5Z8V6H4C4B9QF6XH1T2Z2", user.getId(), "second", Instant.parse("2025-01-01T00:01:00Z"));
-        ChatMessage third = message("01J2M5Z8V6H4C4B9QF6XH1T2Z3", user.getId(), "third", Instant.parse("2025-01-01T00:02:00Z"));
+        Instant firstTimestamp = Instant.parse("2025-01-01T00:00:00Z");
+        Instant secondTimestamp = Instant.parse("2025-01-01T00:01:00Z");
 
-        adapter.save(first);
-        adapter.save(second);
-        adapter.save(third);
+        ChatMessageJpaEntity first = message("01J2M5Z8V6H4C4B9QF6XH1T2Z1", user.getId(), "first", firstTimestamp);
+        ChatMessageJpaEntity second = message("01J2M5Z8V6H4C4B9QF6XH1T2Z2", user.getId(), "second", secondTimestamp);
+        ChatMessageJpaEntity third = message("01J2M5Z8V6H4C4B9QF6XH1T2Z3", user.getId(), "third", secondTimestamp);
 
-        List<ChatMessage> lastTwo = adapter.findLastN(2);
+        repository.saveAll(List.of(first, second, third));
 
-        assertThat(lastTwo).extracting(ChatMessage::getId)
-                .containsExactly(second.getId(), third.getId());
+        List<ChatMessageJpaEntity> results = repository.findAllByOrderByCreatedAtDescIdDesc(PageRequest.of(0, 2));
+
+        assertThat(results)
+                .extracting(ChatMessageJpaEntity::getId)
+                .containsExactly(third.getId(), second.getId());
     }
 
-    private static ChatMessage message(String id, UUID userId, String text, Instant createdAt) {
-        return ChatMessage.post(new MessageId(id), new UserId(userId), text, createdAt);
+    private static ChatMessageJpaEntity message(String id, UUID userId, String text, Instant createdAt) {
+        return new ChatMessageJpaEntity(id, userId, text, createdAt);
     }
 
     private static UserEntity buildUser() {

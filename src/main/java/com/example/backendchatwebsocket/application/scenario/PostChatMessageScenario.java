@@ -1,5 +1,6 @@
-package com.example.backendchatwebsocket.application;
+package com.example.backendchatwebsocket.application.scenario;
 
+import com.example.backendchatwebsocket.application.event.ChatMessageEvent;
 import java.time.Instant;
 import java.util.UUID;
 import org.slf4j.Logger;

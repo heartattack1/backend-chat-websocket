@@ -1,10 +1,10 @@
-package com.example.backendchatwebsocket.adapters;
+package com.example.backendchatwebsocket.adapters.outbound.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.example.backendchatwebsocket.domain.ChatMessage;
-import com.example.backendchatwebsocket.domain.MessageId;
-import com.example.backendchatwebsocket.domain.UserId;
+import com.example.backendchatwebsocket.domain.model.ChatMessage;
+import com.example.backendchatwebsocket.domain.model.MessageId;
+import com.example.backendchatwebsocket.domain.model.UserId;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
