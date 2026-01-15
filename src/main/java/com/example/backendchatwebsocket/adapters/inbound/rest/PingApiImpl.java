@@ -4,9 +4,11 @@ import com.example.backendchat.api.PingApi;
 import com.example.backendchat.api.model.PingResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RestController;
 
+@RestController
 @Service
-public class PingApiDelegateImpl implements PingApi {
+public class PingApiImpl implements PingApi {
 
     @Override
     public ResponseEntity<PingResponse> getPing() {

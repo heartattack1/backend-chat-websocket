@@ -5,6 +5,15 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd">
     <changeSet id="2025-02-20-create-users-table" author="rsadretdinov">
+
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <not>
+                    <tableExists tableName="users"/>
+                </not>
+            </and>
+        </preConditions>
+
         <createTable tableName="users">
             <column name="id" type="UUID">
                 <constraints primaryKey="true" nullable="false" primaryKeyName="pk_users"/>
