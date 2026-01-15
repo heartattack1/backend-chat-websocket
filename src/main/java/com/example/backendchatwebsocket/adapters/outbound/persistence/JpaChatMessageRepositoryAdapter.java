@@ -1,7 +1,7 @@
-package com.example.backendchatwebsocket.adapters;
+package com.example.backendchatwebsocket.adapters.outbound.persistence;
 
-import com.example.backendchatwebsocket.domain.ChatMessage;
-import com.example.backendchatwebsocket.domain.ChatMessageRepository;
+import com.example.backendchatwebsocket.domain.model.ChatMessage;
+import com.example.backendchatwebsocket.domain.repository.ChatMessageRepository;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;

@@ -1,13 +1,14 @@
-package com.example.backendchatwebsocket.application;
+package com.example.backendchatwebsocket.application.scenario;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-import com.example.backendchatwebsocket.domain.ChatMessage;
-import com.example.backendchatwebsocket.domain.ChatMessageRepository;
-import com.example.backendchatwebsocket.domain.MessageId;
-import com.example.backendchatwebsocket.domain.MessageIdGenerator;
-import com.example.backendchatwebsocket.domain.UserId;
+import com.example.backendchatwebsocket.application.command.PostMessageCommand;
+import com.example.backendchatwebsocket.domain.model.ChatMessage;
+import com.example.backendchatwebsocket.domain.model.MessageId;
+import com.example.backendchatwebsocket.domain.model.UserId;
+import com.example.backendchatwebsocket.domain.repository.ChatMessageRepository;
+import com.example.backendchatwebsocket.domain.service.MessageIdGenerator;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;

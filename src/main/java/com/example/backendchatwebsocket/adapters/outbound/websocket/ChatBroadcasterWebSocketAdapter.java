@@ -1,7 +1,7 @@
 package com.example.backendchatwebsocket.adapters.outbound.websocket;
 
-import com.example.backendchatwebsocket.application.ChatBroadcaster;
-import com.example.backendchatwebsocket.application.ChatMessageEvent;
+import com.example.backendchatwebsocket.application.event.ChatMessageEvent;
+import com.example.backendchatwebsocket.application.port.ChatBroadcaster;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 

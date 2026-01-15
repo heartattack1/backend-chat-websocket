@@ -1,4 +1,4 @@
-package com.example.backendchatwebsocket.adapters;
+package com.example.backendchatwebsocket.adapters.outbound.persistence;
 
 import java.util.Optional;
 import java.util.UUID;

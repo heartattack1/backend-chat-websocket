@@ -1,4 +1,6 @@
-package com.example.backendchatwebsocket.domain;
+package com.example.backendchatwebsocket.domain.repository;
+
+import com.example.backendchatwebsocket.domain.model.ChatMessage;
 
 import java.util.List;
 

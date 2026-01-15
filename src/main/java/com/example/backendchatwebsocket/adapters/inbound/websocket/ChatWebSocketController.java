@@ -1,8 +1,8 @@
 package com.example.backendchatwebsocket.adapters.inbound.websocket;
 
-import com.example.backendchatwebsocket.application.ChatBroadcaster;
-import com.example.backendchatwebsocket.application.ChatMessageEvent;
-import com.example.backendchatwebsocket.application.PostChatMessageScenario;
+import com.example.backendchatwebsocket.application.event.ChatMessageEvent;
+import com.example.backendchatwebsocket.application.port.ChatBroadcaster;
+import com.example.backendchatwebsocket.application.scenario.PostChatMessageScenario;
 import java.security.Principal;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;

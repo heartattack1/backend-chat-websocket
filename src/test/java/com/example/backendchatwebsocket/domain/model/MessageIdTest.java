@@ -1,4 +1,4 @@
-package com.example.backendchatwebsocket.domain;
+package com.example.backendchatwebsocket.domain.model;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;

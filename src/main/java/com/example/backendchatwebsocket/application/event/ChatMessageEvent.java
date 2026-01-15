@@ -1,4 +1,4 @@
-package com.example.backendchatwebsocket.application;
+package com.example.backendchatwebsocket.application.event;
 
 import java.time.Instant;
 

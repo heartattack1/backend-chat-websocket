@@ -1,4 +1,4 @@
-package com.example.backendchatwebsocket.domain;
+package com.example.backendchatwebsocket.domain.model;
 
 import java.util.Objects;
 

@@ -1,7 +1,7 @@
-package com.example.backendchatwebsocket.adapters;
+package com.example.backendchatwebsocket.adapters.outbound.id;
 
-import com.example.backendchatwebsocket.domain.MessageId;
-import com.example.backendchatwebsocket.domain.MessageIdGenerator;
+import com.example.backendchatwebsocket.domain.model.MessageId;
+import com.example.backendchatwebsocket.domain.service.MessageIdGenerator;
 import com.github.f4b6a3.ulid.UlidCreator;
 import org.springframework.stereotype.Component;
 
