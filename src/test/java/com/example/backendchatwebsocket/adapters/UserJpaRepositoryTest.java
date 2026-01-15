@@ -38,21 +38,21 @@ class UserJpaRepositoryTest {
 
     @Test
     void savesAndLoadsUserById() {
-        UserEntity user = buildUser("github", "octo-1");
+        UserEntity user = buildUser("vk", "vk-1");
 
         userJpaRepository.save(user);
 
         Optional<UserEntity> loaded = userJpaRepository.findById(user.getId());
 
         assertThat(loaded).isPresent();
-        assertThat(loaded.get().getDisplayName()).isEqualTo("Octo User");
-        assertThat(loaded.get().getProfileUrl()).isEqualTo("https://example.com/octo");
+        assertThat(loaded.get().getDisplayName()).isEqualTo("Ivanov Ivan");
+        assertThat(loaded.get().getProfileUrl()).isEqualTo("https://example.com/vk");
     }
 
     @Test
     void enforcesUniqueProviderAndProviderUserId() {
-        UserEntity first = buildUser("google", "sub-123");
-        UserEntity second = buildUser("google", "sub-123");
+        UserEntity first = buildUser("vk", "vk-2");
+        UserEntity second = buildUser("vk", "vk-2");
 
         userJpaRepository.save(first);
 
@@ -68,8 +68,8 @@ class UserJpaRepositoryTest {
                 UUID.randomUUID(),
                 provider,
                 providerUserId,
-                "Octo User",
-                "https://example.com/octo",
+                "Ivanov Ivan",
+                "https://example.com/vk",
                 now.minusDays(1),
                 true,
                 now,
