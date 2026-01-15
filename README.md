@@ -20,3 +20,11 @@
    ```bash
    docker compose down
    ```
+
+## Run tests locally
+
+From the project root, execute:
+
+```bash
+./gradlew test
+```
