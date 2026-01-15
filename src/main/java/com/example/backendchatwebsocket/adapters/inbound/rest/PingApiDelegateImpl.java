@@ -1,6 +1,7 @@
 package com.example.backendchatwebsocket.adapters.inbound.rest;
 
 import com.example.backendchat.api.model.PingResponse;
+import com.example.backendchat.api.PingApiDelegate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
