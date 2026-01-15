@@ -38,4 +38,5 @@
             <column name="provider"/>
         </createIndex>
     </changeSet>
+    <include file="db/changelog/2025-02-21-create-chat-message.xml"/>
 </databaseChangeLog>
