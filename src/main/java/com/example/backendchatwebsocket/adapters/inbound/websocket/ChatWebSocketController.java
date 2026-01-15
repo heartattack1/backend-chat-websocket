@@ -2,7 +2,7 @@ package com.example.backendchatwebsocket.adapters.inbound.websocket;
 
 import com.example.backendchatwebsocket.application.ChatBroadcaster;
 import com.example.backendchatwebsocket.application.ChatMessageEvent;
-import com.example.backendchatwebsocket.application.PostChatMessageUseCase;
+import com.example.backendchatwebsocket.application.PostChatMessageScenario;
 import java.security.Principal;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -10,12 +10,12 @@ import org.springframework.stereotype.Controller;
 
 @Controller
 public class ChatWebSocketController {
-    private final PostChatMessageUseCase postChatMessageUseCase;
+    private final PostChatMessageScenario postChatMessageScenario;
     private final ChatBroadcaster chatBroadcaster;
 
-    public ChatWebSocketController(PostChatMessageUseCase postChatMessageUseCase,
+    public ChatWebSocketController(PostChatMessageScenario postChatMessageScenario,
                                    ChatBroadcaster chatBroadcaster) {
-        this.postChatMessageUseCase = postChatMessageUseCase;
+        this.postChatMessageScenario = postChatMessageScenario;
         this.chatBroadcaster = chatBroadcaster;
     }
 
@@ -24,7 +24,8 @@ public class ChatWebSocketController {
                                Principal principal,
                                @Header(name = "author", required = false) String authorHeader) {
         String author = resolveAuthor(principal, authorHeader);
-        ChatMessageEvent event = postChatMessageUseCase.handle(author, request == null ? null : request.getText());
+        String text = request == null ? null : request.getText();
+        ChatMessageEvent event = postChatMessageScenario.execute(new PostChatMessageScenario.Request(author, text));
         chatBroadcaster.broadcast(event);
     }
 

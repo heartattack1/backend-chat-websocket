@@ -7,13 +7,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
-public class PostChatMessageUseCase {
+public class PostChatMessageScenario implements Scenario<Void, ChatMessageEvent, PostChatMessageScenario.Request> {
     private static final int MAX_LENGTH = 1000;
-    private final Logger logger = LoggerFactory.getLogger(PostChatMessageUseCase.class);
+    private final Logger logger = LoggerFactory.getLogger(PostChatMessageScenario.class);
 
-    public ChatMessageEvent handle(String author, String text) {
-        String normalizedAuthor = normalizeAuthor(author);
-        String normalizedText = normalizeText(text);
+    @Override
+    public ChatMessageEvent execute(Request request) {
+        String normalizedAuthor = normalizeAuthor(request.author());
+        String normalizedText = normalizeText(request.text());
         validateText(normalizedText);
 
         String id = UUID.randomUUID().toString();
@@ -56,5 +57,8 @@ public class PostChatMessageUseCase {
                 event.getText().length(),
                 sanitizedText
         );
+    }
+
+    public record Request(String author, String text) {
     }
 }
