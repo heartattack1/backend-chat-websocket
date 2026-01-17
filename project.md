@@ -29,29 +29,29 @@
 ## 2. Текущее состояние репозитория (кратко)
 
 - **Стек:** Spring Boot + WebSocket/STOMP + SockJS, Spring Data JPA, Liquibase, PostgreSQL.
-- **WebSocket:** есть endpoint `/ws`, STOMP broker `/topic` и `/queue`, приложения на `/app`.
-- **Домен:** `ChatMessage`, `MessageId`, `UserId`, сценарии для отправки сообщений.
-- **Persistence:** JPA-сущности и репозитории для сообщений и пользователей; миграции Liquibase.
-- **REST:** есть только ping-эндпоинт в OpenAPI.
+- **WebSocket:** endpoint `/ws`, STOMP broker `/topic` и `/queue`, application destinations `/app`.
+- **REST/OpenAPI:** `GET /api/ping`, `GET /api/chat/history`, `GET /api/chat/users`.
+- **Домен:** `ChatMessage`, `MessageId`, `UserId`, сценарии для отправки сообщений и получения истории.
+- **Persistence:** JPA-сущности и репозитории для сообщений; миграции Liquibase.
+- **Presence:** in-memory реестр пользователей + broadcast `/topic/chat.users`.
 - **Docker:** присутствуют `Dockerfile` и `docker-compose.yml`.
-- **UI:** исходники `ui-chat-stopm` импортированы в `frontend/` (статический `index.html`).
+- **UI:** статический `frontend/index.html` (оформление готово, но нужно подключение к backend-контрактам).
 
 ### Что уже реализовано (подтверждающие пути)
 - WebSocket конфигурация: `src/main/java/.../adapters/inbound/websocket/WebSocketConfig.java`.
 - WebSocket controller: `src/main/java/.../adapters/inbound/websocket/ChatWebSocketController.java`.
-- Сценарий отправки в чат (без сохранения в БД): `src/main/java/.../application/scenario/PostChatMessageScenario.java`.
-- Сценарий сохранения сообщений: `src/main/java/.../application/scenario/PostMessageScenario.java`.
-- Репозиторий истории (last N): `src/main/java/.../domain/repository/ChatMessageRepository.java`, `src/main/java/.../adapters/outbound/persistence/JpaChatMessageRepositoryAdapter.java`.
+- Сообщения из WebSocket **сохраняются** через `PostChatMessageScenario` → `PostMessageScenario`.
+- История сообщений: `GetChatHistoryScenario`, репозиторий `ChatMessageRepository`.
+- REST историю/онлайн: `ChatHistoryApiImpl`, OpenAPI `src/main/resources/openapi.yaml`.
+- Presence/онлайн: `OnlineUserRegistry`, `WebSocketSessionEventListener`, broadcaster `/topic/chat.users`.
 - Liquibase миграции БД: `src/main/resources/db/changelog/**`.
 - Docker артефакты: `Dockerfile`, `docker-compose.yml`.
-- Текущее описание: `README.md`.
+- Базовое описание: `README.md`.
 
 ### Зазоры/недостающие компоненты
-- UI есть, но требуется привести контракты и убрать авторизацию.
-- Получение истории (last N) на входе.
-- Персистенция сообщений из WebSocket-флоу (сейчас WebSocket-сценарий не сохраняет).
-- Presence/список онлайн пользователей.
-- Полноценное руководство пользователя и сборки (есть каркас в README, но нет описания UX чат-флоу).
+- UI не подключен к backend контрактам (нет фактического подключения/обмена).
+- Требуется UX-логика ввода ника и прокидывание `author`/`username` в STOMP headers.
+- README не описывает полный пользовательский флоу (вход по нику, история, онлайн).
 - Соц. авторизация (опционально).
 
 ---
@@ -60,12 +60,12 @@
 
 | Требование | Статус | Доказательство (пути) | Комментарий |
 |---|---|---|---|
-| Один общий чат | Partial | `ChatWebSocketController`, `WebSocketConfig` | Канал есть, UI нет. |
-| Ввод ника перед входом | Not started | — | Требуется UI и/или handshake logic. |
-| Последние N сообщений на входе | Partial | `ChatMessageRepository#findLastN`, JPA adapter | Нет API/WS флоу выдачи истории. |
+| Один общий чат | Partial | `ChatWebSocketController`, `WebSocketConfig` | Канал есть, UI не интегрирован. |
+| Ввод ника перед входом | Partial | `UsernameResolver`, `ChatWebSocketController` | Есть поддержка заголовков `author/username`, но UI не реализован. |
+| Последние N сообщений на входе | Done (REST) | `GetChatHistoryScenario`, `ChatHistoryApiImpl`, OpenAPI | Возвращается через `GET /api/chat/history`. |
 | Мгновенная доставка сообщений без refresh | Done | `WebSocketConfig`, `ChatWebSocketController` | WebSocket/STOMP работает. |
-| Список пользователей онлайн | Not started | — | Есть только логирование connect/disconnect. |
-| История чата в БД | Partial | Liquibase + JPA repositories | WebSocket сообщения не сохраняются. |
+| Список пользователей онлайн | Done | `OnlineUserRegistry`, `WebSocketSessionEventListener` | Есть REST и broadcast. |
+| История чата в БД | Done | `PostMessageScenario`, JPA + Liquibase | WS-поток сохраняет сообщения. |
 | Java + сервер | Done | Spring Boot project structure | Ок. |
 | Исходники + артефакт + инструкции | Partial | `README.md`, `Dockerfile`, `docker-compose.yml` | Нужны инструкции по использованию. |
 | Не использовать готовые webchat движки | Done | — | В проекте не обнаружено. |
@@ -79,68 +79,26 @@
 
 > Формат: **Epic → Task → Subtasks**. Каждая подзадача самостоятельна.
 
-### Epic A. История чата и единый жизненный цикл сообщений
+### Epic A. История чата и единый жизненный цикл сообщений ✅
 
 **Цель:** любое сообщение, отправленное через WebSocket, сохраняется в БД и доступно для выдачи последних N сообщений при входе.
 
-#### Task A1. Интеграция WebSocket-сценария с сохранением сообщений ✅
-> Итог: WebSocket-поток использует доменный `PostMessageScenario` для сохранения сообщений и эмитит события с ULID и временем из сохраненной доменной модели.
-- **Подзадача A1.1**: Привязать `PostChatMessageScenario` к доменному `PostMessageScenario` или вынести единый сервис.
-  - **DoD:** при отправке через `/app/chat.send` сообщение сохраняется в таблице сообщений.
-  - **Затронутые модули:** `application/scenario/PostChatMessageScenario`, `application/scenario/PostMessageScenario`, `domain/repository/ChatMessageRepository`.
-  - **Подход:** объединение сценариев или последовательный вызов (логика в одном месте).
-  - **Риски/вопросы:** требуется определить единый формат id (UUID vs ULID).
-
-- **Подзадача A1.2**: Согласовать модель события и доменной сущности.
-  - **DoD:** ID/createdAt единообразны в event и domain model.
-  - **Затронутые модули:** `application/event/ChatMessageEvent`, `domain/model/ChatMessage`.
-  - **Подход:** использовать генератор ID домена и `Clock`.
-  - **Риски/вопросы:** влияние на фронтенд формат сообщений.
-
-#### Task A2. Получение последних N сообщений при входе
-- **Подзадача A2.1**: Ввести WS-команду или REST-эндпоинт для получения истории.
-  - **DoD:** клиент на входе получает последние N сообщений из БД.
-  - **Затронутые модули:** `adapters/inbound/websocket`, `application/scenario`, `domain/repository`.
-  - **Подход:** `@MessageMapping("/chat.history")` или REST `/api/chat/history?limit=N`.
-  - **Риски/вопросы:** согласование формата payload и сортировки (по времени ASC).
-
-- **Подзадача A2.2**: Пагинация/лимитирование и дефолтный N.
-  - **DoD:** лимит на запрос истории + безопасное значение по умолчанию.
-  - **Затронутые модули:** `domain/repository/ChatMessageRepository`, `JpaChatMessageRepositoryAdapter`.
-  - **Подход:** использовать `findLastN`, добавить контролируемые лимиты.
+**Результат:** WS-поток сохраняет сообщения через `PostMessageScenario`, история доступна через REST `/api/chat/history` с лимитом и дефолтом.
 
 ---
 
-### Epic B. Presence и список онлайн пользователей
+### Epic B. Presence и список онлайн пользователей ✅
 
 **Цель:** отображение списка онлайн-пользователей для всех клиентов.
 
-#### Task B1. Учёт подключений/отключений
-- **Подзадача B1.1**: Реализовать in-memory реестр активных пользователей (ConcurrentMap). ✅
-  - **DoD:** при connect/disconnect список обновляется.
-  - **Затронутые модули:** `WebSocketSessionEventListener`, новый сервис presence.
-  - **Подход:** хранить `sessionId -> username`.
-  - **Риски/вопросы:** определение username (из handshake или header).
-  - **Итог:** добавлен in-memory реестр online-пользователей и извлечение username из заголовков с настраиваемым fallback.
+**Результат:** in-memory реестр, broadcast `/topic/chat.users`, REST `GET /api/chat/users`.
 
-- **Подзадача B1.2**: Опубликовывать события списка онлайн в `/topic/chat.users`. ✅
-  - **DoD:** все клиенты получают актуальный список при изменениях.
-  - **Затронутые модули:** `ChatBroadcaster` или отдельный broadcaster.
-  - **Подход:** broadcast списка при connect/disconnect.
-  - **Итог:** добавлен WS-broadcaster онлайн-пользователей, отправляющий обновления при connect/disconnect.
-
-- **Подзадача B1.3**: REST-эндпоинт для первичного списка пользователей. ✅
-  - **DoD:** клиент получает список онлайн при входе.
-  - **Затронутые модули:** `adapters/inbound/rest`, presence-сервис.
-  - **Подход:** `GET /api/chat/users`.
-  - **Итог:** добавлен `GET /api/chat/users`, возвращающий актуальный список онлайн.
-
-#### Task B2. Определение никнейма пользователя
-- **Подзадача B2.1**: Определить протокол передачи ника (header, initial message, query param).
+#### Task B2. Определение никнейма пользователя (Partial)
+- **Подзадача B2.1**: Закрепить протокол передачи ника (header, initial message, query param).
   - **DoD:** имя пользователя стабильно доступно серверу.
-  - **Затронутые модули:** `ChatWebSocketController`, `WebSocketConfig`, presence-сервис.
-  - **Подход:** использовать STOMP headers `author` или `/app/chat.join`.
-  - **Риски/вопросы:** защита от пустых/дубликатов имен.
+  - **Затронутые модули:** `UsernameResolver`, `WebSocketConfig`, UI.
+  - **Текущее состояние:** поддерживаются STOMP headers `username`/`author` с fallback `guest-<session>`, но UI/клиент не реализованы.
+  - **Риски/вопросы:** защита от пустых/дубликатов имен, UX ввода.
 
 ---
 
@@ -156,22 +114,22 @@
   - **Затронутые модули:** `frontend/**`, будущая документация.
 - **Подзадача C0.3**: Подготовить план интеграции с backend WS/REST контрактами.
   - **DoD:** список соответствий между UI событиями и backend endpoints (`/ws`, `/app/**`, `/topic/**`, REST).
-  - **Риски/вопросы:** различия в формате payload и именах топиков; отказ от авторизации.
+  - **Риски/вопросы:** различия в формате payload и именах топиков; отсутствие авторизации.
 
 #### Task C1. Страница ввода ника и подключение к WebSocket
 - **Подзадача C1.1**: HTML/CSS/JS страница с формой ввода ника.
-  - **DoD:** пользователь вводит ник и подключается к чату.
+  - **DoD:** пользователь вводит ник и подключается к чату (передаёт `author/username`).
   - **Затронутые модули:** `frontend/**` (приоритет) или `src/main/resources/static/**` (fallback).
   - **Подход:** использовать готовый UI из `ui-chat-stopm` и адаптировать под backend контракты.
 
 - **Подзадача C1.2**: Инициализация WS/STOMP клиента.
-  - **DoD:** после подключения подписки на `/topic/chat.messages` и `/topic/chat.users`, первичная загрузка списка пользователей через REST.
+  - **DoD:** после подключения подписки на `/topic/chat.messages` и `/topic/chat.users`, первичная загрузка списка пользователей и истории через REST.
   - **Риски/вопросы:** необходимость SockJS клиента.
 
 #### Task C2. Отображение истории и новых сообщений
 - **Подзадача C2.1**: Получать history и показывать в хронологическом порядке.
   - **DoD:** последние N сообщений отображаются сразу.
-  - **Подход:** отдельная WS-команда или REST-запрос на историю.
+  - **Подход:** REST `GET /api/chat/history?limit=N` (ASC по времени).
 
 - **Подзадача C2.2**: Отправка сообщений и мгновенное отображение.
   - **DoD:** сообщение появляется у всех подключенных клиентов.
@@ -187,7 +145,7 @@
 **Цель:** понятные инструкции для сборки/запуска/использования.
 
 #### Task D1. README секции
-- **DoD:** описано как собрать, как запускать, как пользоваться (включая N сообщений, вход по нику).
+- **DoD:** описано как собрать, как запускать, как пользоваться (включая N сообщений, вход по нику, online list).
 - **Затронутые модули:** `README.md`.
 - **Подход:** краткий step-by-step + параметры конфигурации.
 
