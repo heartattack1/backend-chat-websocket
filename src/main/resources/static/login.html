@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login • OAuth</title>
+  <script src="https://yastatic.net/s3/passport-sdk/autofill/v1/sdk-suggest-with-polyfills-latest.js"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050607;
+      --panel: #0b0f12;
+      --text: rgba(230,255,240,.92);
+      --muted: rgba(230,255,240,.62);
+      --accent: #00ff70;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(800px 460px at 18% 0%, rgba(0,255,120,.10), transparent 55%),
+        linear-gradient(180deg, #07090b, var(--bg) 70%);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      color: var(--text);
+    }
+    .card {
+      width: min(420px, 92vw);
+      background: var(--panel);
+      border: 1px solid rgba(0,255,120,.18);
+      padding: 24px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.5);
+    }
+    .title {
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      font-size: .88rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    #container {
+      display: flex;
+      justify-content: center;
+      margin-top: 12px;
+    }
+    .status {
+      font-size: .85rem;
+      color: var(--muted);
+      margin-top: 16px;
+      min-height: 18px;
+    }
+    a {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="title">Вход в чат</div>
+    <div class="subtitle">Авторизуйтесь через отечественный OAuth2-провайдер.</div>
+    <div id="container"></div>
+    <div class="status" id="status">Загрузка параметров авторизации...</div>
+    <div class="subtitle" style="margin-top: 12px;">
+      Если кнопка не появилась, проверьте настройки OAuth приложения.
+    </div>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById('status');
+
+    function setStatus(message) {
+      statusEl.textContent = message;
+    }
+
+    function startAuth(config) {
+      window.YaAuthSuggest.init(
+        {
+          client_id: config.clientId,
+          response_type: 'token',
+          redirect_uri: config.redirectUri
+        },
+        config.tokenPageOrigin,
+        {
+          view: 'button',
+          parentId: 'container',
+          buttonView: 'main',
+          buttonTheme: 'light',
+          buttonSize: 'm',
+          buttonBorderRadius: 6
+        }
+      )
+        .then(({ handler }) => handler())
+        .then((data) => {
+          const accessToken = data && (data.access_token || data.accessToken);
+          if (!accessToken) {
+            throw new Error('missing_token');
+          }
+          setStatus('Проверяем токен...');
+          return fetch('/api/auth/yandex', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ access_token: accessToken })
+          });
+        })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('auth_failed');
+          }
+          window.location.href = '/';
+        })
+        .catch((error) => {
+          console.error(error);
+          setStatus('Ошибка авторизации. Проверьте токен или настройки приложения.');
+        });
+    }
+
+    fetch('/api/auth/config')
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('config_unavailable');
+        }
+        return response.json();
+      })
+      .then((config) => {
+        setStatus('Ожидаем подтверждения...');
+        startAuth(config);
+      })
+      .catch(() => {
+        setStatus('OAuth-конфигурация недоступна.');
+      });
+  </script>
+</body>
+</html>

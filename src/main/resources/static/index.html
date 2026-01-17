@@ -169,6 +169,16 @@
     background: rgba(0,0,0,.18);
   }
 
+  .account{
+    font-weight:600;
+    color: rgba(120,230,255,.90);
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid rgba(120,230,255,.18);
+    background: rgba(0,0,0,.18);
+    margin-right: 6px;
+  }
+
   .main{
     display:grid;
     grid-template-columns: 2.2fr 1fr;
@@ -549,6 +559,7 @@
 .message,
 .input-row input,
 button,
+.account,
 .nickname,
 .status,
 #participants > div {
@@ -587,7 +598,7 @@ button,
 }
 
 /* Make status/nickname feel like tags (not pills) */
-.status, .nickname{
+.status, .nickname, .account{
   padding: 6px 10px;
   background: rgba(0,0,0,.22);
   border: 1px solid rgba(255,255,255,.10);
@@ -673,6 +684,7 @@ button{
         <div class="status" id="status">Статус: отключено</div>
       </div>
       <div>
+        <span class="account" id="accountName">...</span>
         <span class="nickname" id="nickname">...</span>
         <button id="logoutBtn">Logout</button>
       </div>
@@ -703,14 +715,17 @@ button{
       const messageForm = document.getElementById('messageForm');
       const messageInput = document.getElementById('messageInput');
       const nicknameEl = document.getElementById('nickname');
+      const accountNameEl = document.getElementById('accountName');
       const logoutBtn = document.getElementById('logoutBtn');
       const errorToastEl = document.getElementById('errorToast');
 
       let errorToastTimer = null;
 
       const storage = {
-        username: localStorage.getItem('chat_username') || ''
+        username: sessionStorage.getItem('chat_username') || ''
       };
+
+      let accountUsername = '';
 
       function setStatus(text) {
         statusEl.textContent = `Статус: ${text}`;
@@ -725,6 +740,13 @@ button{
         nicknameEl.textContent = value || '...';
       }
 
+      function setAccountName(value) {
+        if (!accountNameEl) {
+          return;
+        }
+        accountNameEl.textContent = value || '...';
+      }
+
       function showErrorToast(message) {
         if (!errorToastEl) {
           return;
@@ -737,6 +759,26 @@ button{
         errorToastTimer = setTimeout(() => {
           errorToastEl.classList.remove('show');
         }, 4000);
+      }
+
+      async function ensureAuthenticated() {
+        try {
+          const response = await fetch('/api/auth/me');
+          if (response.status === 401) {
+            window.location.href = '/login';
+            return false;
+          }
+          if (!response.ok) {
+            throw new Error('auth_check_failed');
+          }
+          const data = await response.json();
+          accountUsername = data && data.username ? data.username : '';
+          setAccountName(accountUsername);
+          return true;
+        } catch (error) {
+          window.location.href = '/login';
+          return false;
+        }
       }
 
       function escapeHtml(str) {
@@ -940,7 +982,7 @@ button{
 
         document.body.appendChild(form);
         const input = form.querySelector('#joinNickname');
-        input.value = storage.username;
+        input.value = storage.username || accountUsername || '';
         input.focus();
 
         form.addEventListener('submit', (event) => {
@@ -951,7 +993,7 @@ button{
             return;
           }
           storage.username = value;
-          localStorage.setItem('chat_username', value);
+          sessionStorage.setItem('chat_username', value);
           setNickname(value);
           form.remove();
           ChatSocketService.connect(value);
@@ -974,35 +1016,44 @@ button{
         if (!content) {
           return;
         }
-        ChatSocketService.sendMessage(content, nicknameEl.textContent || storage.username || 'guest');
+        ChatSocketService.sendMessage(content, nicknameEl.textContent || storage.username || accountUsername || 'guest');
         messageInput.value = '';
       });
 
       logoutBtn.addEventListener('click', () => {
-        ChatSocketService.disconnect();
-        localStorage.removeItem('chat_username');
-        storage.username = '';
-        setNickname('');
-        setStatus('отключено');
-        requestNickname();
+        fetch('/api/auth/logout', { method: 'POST' })
+          .finally(() => {
+            ChatSocketService.disconnect();
+            sessionStorage.removeItem('chat_username');
+            storage.username = '';
+            setNickname('');
+            setStatus('отключено');
+            window.location.href = '/login';
+          });
       });
 
-      if (storage.username) {
-        setNickname(storage.username);
-        ChatSocketService.connect(storage.username);
-        fetch('/api/chat/history?limit=50')
-          .then((response) => response.json())
-          .then((history) => {
-            messagesEl.innerHTML = '';
-            const messages = history && history.messages ? history.messages : [];
-            messages.forEach((message) => renderMessage(message));
-          })
-          .catch(() => {
-            setStatus('ошибка загрузки истории');
-          });
-      } else {
-        requestNickname();
-      }
+      ensureAuthenticated().then((authenticated) => {
+        if (!authenticated) {
+          return;
+        }
+        if (storage.username) {
+          const activeName = storage.username;
+          setNickname(activeName);
+          ChatSocketService.connect(activeName);
+          fetch('/api/chat/history?limit=50')
+            .then((response) => response.json())
+            .then((history) => {
+              messagesEl.innerHTML = '';
+              const messages = history && history.messages ? history.messages : [];
+              messages.forEach((message) => renderMessage(message));
+            })
+            .catch(() => {
+              setStatus('ошибка загрузки истории');
+            });
+        } else {
+          requestNickname();
+        }
+      });
     })();
   </script>
 </body>

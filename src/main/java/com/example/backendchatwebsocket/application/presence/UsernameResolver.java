@@ -28,6 +28,14 @@ public class UsernameResolver {
             }
         }
 
+        for (String headerName : properties.getUsernameHeaderNames()) {
+            List<String> values = accessor.getNativeHeader(headerName);
+            if (values == null) continue;
+            for (String v : values) {
+                if (v != null && !v.isBlank()) return v.trim();
+            }
+        }
+
         String principalName = Optional.ofNullable(accessor.getUser())
                 .map(Object::toString)
                 .map(String::trim)
@@ -35,14 +43,6 @@ public class UsernameResolver {
                 .orElse(null);
         if (principalName != null) {
             return principalName;
-        }
-
-        for (String headerName : properties.getUsernameHeaderNames()) {
-            List<String> values = accessor.getNativeHeader(headerName);
-            if (values == null) continue;
-            for (String v : values) {
-                if (v != null && !v.isBlank()) return v.trim();
-            }
         }
 
         String sessionId = Optional.ofNullable(accessor.getSessionId()).orElse("unknown");

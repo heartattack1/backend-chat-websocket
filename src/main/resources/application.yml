@@ -33,3 +33,9 @@ chat:
   websocket:
     allowed-origins:
       - http://localhost:8080
+  oauth:
+    yandex:
+      client-id: ${YANDEX_CLIENT_ID:}
+      redirect-uri: ${YANDEX_REDIRECT_URI:http://localhost:8080/oauth/token}
+      token-page-origin: ${YANDEX_TOKEN_PAGE_ORIGIN:http://localhost:8080}
+      user-info-uri: ${YANDEX_USER_INFO_URI:https://login.yandex.ru/info?format=json}
