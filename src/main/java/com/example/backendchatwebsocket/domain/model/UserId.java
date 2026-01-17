@@ -3,15 +3,9 @@ package com.example.backendchatwebsocket.domain.model;
 import java.util.Objects;
 import java.util.UUID;
 
-public final class UserId {
-    private final UUID value;
-
+public record UserId(UUID value) {
     public UserId(UUID value) {
         this.value = Objects.requireNonNull(value, "UserId value cannot be null");
-    }
-
-    public UUID value() {
-        return value;
     }
 
     @Override
@@ -24,14 +18,10 @@ public final class UserId {
         if (this == other) {
             return true;
         }
-        if (!(other instanceof UserId userId)) {
+        if (!(other instanceof UserId(UUID value1))) {
             return false;
         }
-        return value.equals(userId.value);
+        return value.equals(value1);
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
-    }
 }

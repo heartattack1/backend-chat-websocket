@@ -1,1 +1,3 @@
 rootProject.name = 'backend-chat-websocket'
+
+include 'lib'

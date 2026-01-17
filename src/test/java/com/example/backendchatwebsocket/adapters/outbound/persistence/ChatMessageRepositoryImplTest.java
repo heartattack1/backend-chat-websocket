@@ -23,7 +23,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @DataJpaTest
 @Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class JpaChatMessageRepositoryAdapterTest {
+class ChatMessageRepositoryImplTest {
 
     @Container
     private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
@@ -36,7 +36,7 @@ class JpaChatMessageRepositoryAdapterTest {
     }
 
     @Autowired
-    private ChatMessageSpringDataRepository chatMessageSpringDataRepository;
+    private ChatMessageJpaRepository chatMessageJpaRepository;
 
     @Autowired
     private UserJpaRepository userJpaRepository;
@@ -45,7 +45,7 @@ class JpaChatMessageRepositoryAdapterTest {
     void findsLastMessagesInChronologicalOrder() {
         UserEntity user = buildUser();
         userJpaRepository.save(user);
-        JpaChatMessageRepositoryAdapter adapter = new JpaChatMessageRepositoryAdapter(chatMessageSpringDataRepository);
+        ChatMessageRepositoryImpl adapter = new ChatMessageRepositoryImpl(chatMessageJpaRepository);
 
         ChatMessage first = message("01J2M5Z8V6H4C4B9QF6XH1T2Z1", user.getId(), "first", Instant.parse("2025-01-01T00:00:00Z"));
         ChatMessage second = message("01J2M5Z8V6H4C4B9QF6XH1T2Z2", user.getId(), "second", Instant.parse("2025-01-01T00:01:00Z"));

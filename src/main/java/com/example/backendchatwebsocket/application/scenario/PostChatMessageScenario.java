@@ -10,30 +10,27 @@ import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
-public class PostChatMessageScenario implements Scenario<Void, ChatMessageEvent, PostChatMessageScenario.Request> {
+@RequiredArgsConstructor
+@Slf4j
+public class PostChatMessageScenario implements Scenario<Void, ChatMessageEvent, PostChatMessageCommand> {
     private static final int MAX_LENGTH = 1000;
-    private final Logger logger = LoggerFactory.getLogger(PostChatMessageScenario.class);
+
     private final PostMessageScenario postMessageScenario;
     private final UserRepository userRepository;
     private final Clock clock;
 
-    public PostChatMessageScenario(PostMessageScenario postMessageScenario,
-                                   UserRepository userRepository,
-                                   Clock clock) {
-        this.postMessageScenario = postMessageScenario;
-        this.userRepository = userRepository;
-        this.clock = clock;
-    }
-
     @Override
-    public ChatMessageEvent execute(Request request) {
-        String normalizedAuthor = normalizeAuthor(request.author());
-        String normalizedText = normalizeText(request.text());
+    public ChatMessageEvent execute(PostChatMessageCommand postChatMessageCommand) {
+        String normalizedAuthor = normalizeAuthor(postChatMessageCommand.author());
+        String normalizedText = normalizeText(postChatMessageCommand.text());
         validateText(normalizedText);
 
         UserId authorUserId = toAuthorUserId(normalizedAuthor);
@@ -70,7 +67,7 @@ public class PostChatMessageScenario implements Scenario<Void, ChatMessageEvent,
 
     private void logMessage(ChatMessageEvent event) {
         String sanitizedText = event.getText().replaceAll("[\r\n]+", " ");
-        logger.info(
+        log.info(
                 "chat_message_posted author={} id={} length={} text={}",
                 event.getAuthor(),
                 event.getId(),
@@ -103,6 +100,5 @@ public class PostChatMessageScenario implements Scenario<Void, ChatMessageEvent,
         userRepository.save(user);
     }
 
-    public record Request(String author, String text) {
-    }
+
 }

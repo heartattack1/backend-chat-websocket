@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 
@@ -35,20 +37,11 @@ public class UsernameResolver {
             return principalName;
         }
 
-        Map<String, List<String>> nativeHeaders = accessor.getNativeHeaderMap();
         for (String headerName : properties.getUsernameHeaderNames()) {
-            List<String> values = nativeHeaders.get(headerName);
-            if (values == null || values.isEmpty()) {
-                continue;
-            }
-            String candidate = values.stream()
-                    .filter(Objects::nonNull)
-                    .map(String::trim)
-                    .filter(value -> !value.isEmpty())
-                    .findFirst()
-                    .orElse(null);
-            if (candidate != null) {
-                return candidate;
+            List<String> values = accessor.getNativeHeader(headerName);
+            if (values == null) continue;
+            for (String v : values) {
+                if (v != null && !v.isBlank()) return v.trim();
             }
         }
 

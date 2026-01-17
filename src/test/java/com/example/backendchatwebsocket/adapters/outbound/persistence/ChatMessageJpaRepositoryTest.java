@@ -21,7 +21,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @DataJpaTest
 @Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class ChatMessageSpringDataRepositoryTest {
+class ChatMessageJpaRepositoryTest {
 
     @Container
     private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
@@ -34,7 +34,7 @@ class ChatMessageSpringDataRepositoryTest {
     }
 
     @Autowired
-    private ChatMessageSpringDataRepository repository;
+    private ChatMessageJpaRepository repository;
 
     @Autowired
     private UserJpaRepository userJpaRepository;
@@ -47,21 +47,21 @@ class ChatMessageSpringDataRepositoryTest {
         Instant firstTimestamp = Instant.parse("2025-01-01T00:00:00Z");
         Instant secondTimestamp = Instant.parse("2025-01-01T00:01:00Z");
 
-        ChatMessageJpaEntity first = message("01J2M5Z8V6H4C4B9QF6XH1T2Z1", user.getId(), "first", firstTimestamp);
-        ChatMessageJpaEntity second = message("01J2M5Z8V6H4C4B9QF6XH1T2Z2", user.getId(), "second", secondTimestamp);
-        ChatMessageJpaEntity third = message("01J2M5Z8V6H4C4B9QF6XH1T2Z3", user.getId(), "third", secondTimestamp);
+        ChatMessageEntity first = message("01J2M5Z8V6H4C4B9QF6XH1T2Z1", user.getId(), "first", firstTimestamp);
+        ChatMessageEntity second = message("01J2M5Z8V6H4C4B9QF6XH1T2Z2", user.getId(), "second", secondTimestamp);
+        ChatMessageEntity third = message("01J2M5Z8V6H4C4B9QF6XH1T2Z3", user.getId(), "third", secondTimestamp);
 
         repository.saveAll(List.of(first, second, third));
 
-        List<ChatMessageJpaEntity> results = repository.findAllByOrderByCreatedAtDescIdDesc(PageRequest.of(0, 2));
+        List<ChatMessageEntity> results = repository.findAllByOrderByCreatedAtDescIdDesc(PageRequest.of(0, 2));
 
         assertThat(results)
-                .extracting(ChatMessageJpaEntity::getId)
+                .extracting(ChatMessageEntity::getId)
                 .containsExactly(third.getId(), second.getId());
     }
 
-    private static ChatMessageJpaEntity message(String id, UUID userId, String text, Instant createdAt) {
-        return new ChatMessageJpaEntity(id, userId, text, createdAt);
+    private static ChatMessageEntity message(String id, UUID userId, String text, Instant createdAt) {
+        return new ChatMessageEntity(id, userId, text, createdAt);
     }
 
     private static UserEntity buildUser() {

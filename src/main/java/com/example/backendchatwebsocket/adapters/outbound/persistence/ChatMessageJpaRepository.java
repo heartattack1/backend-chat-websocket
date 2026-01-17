@@ -5,9 +5,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-public interface ChatMessageSpringDataRepository extends JpaRepository<ChatMessageJpaEntity, String> {
+public interface ChatMessageJpaRepository extends JpaRepository<ChatMessageEntity, String> {
 
-    List<ChatMessageJpaEntity> findAllByOrderByCreatedAtDescIdDesc(Pageable pageable);
+    List<ChatMessageEntity> findAllByOrderByCreatedAtDescIdDesc(Pageable pageable);
 
     @Query("""
             select m.id as id,
@@ -15,7 +15,7 @@ public interface ChatMessageSpringDataRepository extends JpaRepository<ChatMessa
                    u.displayName as authorName,
                    m.text as text,
                    m.createdAt as createdAt
-            from ChatMessageJpaEntity m
+            from ChatMessageEntity m
             join UserEntity u on u.id = m.authorUserId
             order by m.createdAt desc, m.id desc
             """)

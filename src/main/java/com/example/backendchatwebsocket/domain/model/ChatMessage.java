@@ -1,8 +1,11 @@
 package com.example.backendchatwebsocket.domain.model;
 
+import lombok.Getter;
+
 import java.time.Instant;
 import java.util.Objects;
 
+@Getter
 public final class ChatMessage {
     private final MessageId id;
     private final UserId authorUserId;
@@ -23,19 +26,4 @@ public final class ChatMessage {
         return new ChatMessage(id, authorUserId, text, createdAt);
     }
 
-    public MessageId getId() {
-        return id;
-    }
-
-    public UserId getAuthorUserId() {
-        return authorUserId;
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
 }

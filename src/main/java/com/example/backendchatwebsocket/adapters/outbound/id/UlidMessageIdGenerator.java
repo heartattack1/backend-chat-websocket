@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class UlidMessageIdGenerator implements MessageIdGenerator {
+
     @Override
     public MessageId nextId() {
         String ulid = UlidCreator.getMonotonicUlid().toString();
