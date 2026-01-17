@@ -1,61 +1,41 @@
-# ui-chat-stopm (локально импортировано)
+# Frontend (статическая страница чата)
+
+Фронтенд реализован как один статический файл `src/main/resources/static/index.html`, который раздаётся самим Spring Boot приложением. Отдельной сборки, npm-зависимостей и bundler'а нет.
 
 ## Что внутри
 
-- **Формат:** один статический `index.html` с инлайновыми CSS/JS. Сборщик не используется.
-- **Зависимости:** подключаются через CDN
+- **HTML/CSS/JS:** всё инлайн в `index.html`.
+- **Зависимости через CDN:**
   - `sockjs-client@1`
   - `stompjs@2.3.3`
-- **Точки входа:**
-  - HTML: `src/main/resources/static/index.html`
-  - JS: инлайн-скрипт внутри `index.html`
-  - CSS: инлайн-стили внутри `index.html`
+- **Хранение ника:** `localStorage` (`chat_username`).
 
-## Контракты текущего UI (как есть в index.html)
+## Контракты с backend
 
-- **STOMP endpoint:** `/ws` (SockJS)
-- **Публикация сообщений:** `/app/chat.send`
-  - Сейчас отправляется payload `{ author, content, timestamp }`
+### WebSocket/STOMP
+
+- **Endpoint:** `/ws` (SockJS).
+- **Отправка сообщений:** `/app/chat.send`
+  - Payload: `{ "text": "..." }`
+  - Header: `author` (опционально), если пусто — сервер использует fallback.
 - **Подписки:**
-  - `/topic/chat`
-  - `/topic/participants`
-- **Авторизация:** в текущем UI есть логика JWT refresh, но **по договорённости использовать не будем**.
+  - `/topic/chat.messages` — новые сообщения `{ id, authorId, authorName, text, createdAt }`
+  - `/topic/chat.users` — список онлайна `["alice", "bob"]`
 
-## Целевой контракт (без авторизации)
+### REST
 
-- **STOMP endpoint:** `/ws` (SockJS)
-- **Публикация сообщений:** `/app/chat.send`
-  - Payload `{ text }`
-  - `author` передаётся через STOMP header `author`
-- **Подписка на сообщения:** `/topic/chat.messages`
-  - Payload `{ id, text, author, createdAt }`
-- **Список онлайн:**
-  - Начальная загрузка: REST `GET /api/chat/users`
-  - Обновления: `/topic/chat.users` (полный список или diff — согласовать)
+- `GET /api/chat/history?limit=50` — история сообщений (по умолчанию 50, максимум 100).
+- `GET /api/chat/users` — текущий список онлайн-пользователей.
 
-## Совмещение с backend-chat-websocket (что нужно привести к одному виду)
+## Пользовательский сценарий
 
-### Совпадения
-- Endpoint `/ws` уже совпадает с серверной конфигурацией.
+1. При первом входе отображается форма для ввода ника.
+2. Ник сохраняется в `localStorage` и отправляется в header `username` при WebSocket handshake.
+3. После подключения:
+   - загружается история сообщений через REST,
+   - подписка на сообщения и онлайн пользователей обновляется через WS.
 
-### Несовпадения
-- **Топик сообщений:** UI подписывается на `/topic/chat`, backend публикует в `/topic/chat.messages`.
-- **Формат входящего сообщения:** UI ожидает `{ author, content, timestamp }`, backend публикует `{ id, text, author, createdAt }`.
-- **Payload при отправке:** UI отправляет `{ author, content, timestamp }`, backend ожидает `{ text }` и `author` в header.
-- **Онлайн-участники:** UI подписывается на `/topic/participants`, backend должен публиковать `/topic/chat.users` и отдавать стартовый список через REST.
-- **Авторизация:** UI содержит JWT-логику, но по решению задачи она должна быть удалена/отключена.
+## Как открыть
 
-### План интеграции (предварительный)
-1. **Сообщения:**
-   - В UI заменить подписку на `/topic/chat.messages`.
-   - В UI маппить `text -> content`, `createdAt -> timestamp`.
-   - При отправке использовать payload `{ text }`, а `author` передавать через STOMP header `author`.
-2. **История сообщений:** реализовать REST или WS команду под историю (ожидается реализация на backend).
-3. **Онлайн-пользователи:**
-   - Добавить REST `GET /api/chat/users` для первичного списка.
-   - Подписаться на `/topic/chat.users` для обновлений.
-4. **Авторизация:** удалить/отключить JWT refresh и `Authorization` header в UI.
-
-## Как открыть локально
-
-Открыть `http://localhost:8080` после запуска приложения через Docker Compose.
+1. Запустите backend (`docker compose up --build` или `./gradlew bootRun`).
+2. Откройте страницу `http://localhost:8080`.
