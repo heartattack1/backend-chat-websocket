@@ -29,6 +29,14 @@ From the project root, execute:
 ./gradlew test
 ```
 
+## Usage
+
+1. Start the stack (see instructions above) and open `http://localhost:8080` in your browser.
+2. Enter a nickname on the join screen. The client passes the nickname as a STOMP header.
+3. The UI immediately loads the last N messages from `GET /api/chat/history?limit=50` and renders them chronologically.
+4. Online users are shown in the right panel and are refreshed via `GET /api/chat/users` and `/topic/chat.users` updates.
+5. Post messages from the input field; they are sent to `/app/chat.send` and broadcast to `/topic/chat.messages` without page refresh.
+
 ## Current state of the project
 
 ### Runtime/API surface
@@ -40,7 +48,7 @@ From the project root, execute:
 - Persistence uses Spring Data JPA with PostgreSQL, managed by Liquibase migrations in `src/main/resources/db/changelog`.
 - There are two message flows today:
   - `PostMessageScenario` persists a `ChatMessage` to the database using the repository and ULID generator.
-  - `PostChatMessageScenario` (used by the WebSocket controller) validates, logs, and broadcasts chat messages but **does not persist** them yet.
+  - `PostChatMessageScenario` (used by the WebSocket controller) validates, logs, persists, and broadcasts chat messages.
 
 ### Observability/logging
 - Posted chat messages are logged with author, id, and length (sanitized to single-line output) by `PostChatMessageScenario`.

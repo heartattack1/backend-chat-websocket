@@ -692,6 +692,9 @@ button{
           '';
       }
 
+      function setNickname(value) {
+        nicknameEl.textContent = value || '...';
+      }
 
       function escapeHtml(str) {
         return String(str)
@@ -760,12 +763,17 @@ button{
         let connecting = false;
         let manualClose = false;
         let activeUsername = '';
+        let reconnectTimer = null;
 
         function connect(username) {
           if (connecting || manualClose) {
             return;
           }
           activeUsername = String(username || '').trim();
+          if (!activeUsername) {
+            setStatus('нужно перелогиниться');
+            return;
+          }
           connecting = true;
           setStatus('подключение...');
           sock = new SockJS('/ws');
@@ -811,11 +819,18 @@ button{
           const delay = baseDelay * Math.pow(2, reconnectAttempts);
           reconnectAttempts += 1;
           setStatus(`переподключение через ${delay / 1000}с`);
-          setTimeout(connect, delay);
+          if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+          }
+          reconnectTimer = setTimeout(() => connect(activeUsername), delay);
         }
 
         function disconnect() {
           manualClose = true;
+          if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+            reconnectTimer = null;
+          }
           if (stompClient) {
             stompClient.disconnect(() => {
               setStatus('отключено');
@@ -869,7 +884,7 @@ button{
           }
           storage.username = value;
           localStorage.setItem('chat_username', value);
-          nicknameEl.textContent = value;
+          setNickname(value);
           form.remove();
           ChatSocketService.connect(value);
           fetch('/api/chat/history?limit=50')
@@ -903,10 +918,35 @@ button{
 
       logoutBtn.addEventListener('click', () => {
         ChatSocketService.disconnect();
+        localStorage.removeItem('chat_username');
+        storage.username = '';
+        setNickname('');
         setStatus('отключено');
+        requestNickname();
       });
 
-      requestNickname();
+      if (storage.username) {
+        setNickname(storage.username);
+        ChatSocketService.connect(storage.username);
+        fetch('/api/chat/history?limit=50')
+          .then((response) => response.json())
+          .then((history) => {
+            messagesEl.innerHTML = '';
+            const messages = history && history.messages ? history.messages : [];
+            messages.forEach((message) => renderMessage(message));
+          })
+          .catch(() => {
+            setStatus('ошибка загрузки истории');
+          });
+        fetch('/api/chat/users')
+          .then((response) => response.json())
+          .then((usersResponse) => renderParticipants(usersResponse && usersResponse.users ? usersResponse.users : []))
+          .catch(() => {
+            setStatus('ошибка загрузки списка пользователей');
+          });
+      } else {
+        requestNickname();
+      }
     })();
   </script>
 </body>

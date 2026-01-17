@@ -35,7 +35,7 @@
 - **Persistence:** JPA-сущности и репозитории для сообщений; миграции Liquibase.
 - **Presence:** in-memory реестр пользователей + broadcast `/topic/chat.users`.
 - **Docker:** присутствуют `Dockerfile` и `docker-compose.yml`.
-- **UI:** статический `frontend/index.html` (оформление готово, но нужно подключение к backend-контрактам).
+- **UI:** статический `frontend/index.html` подключен к WebSocket и REST контрактам, есть ввод ника и отображение истории/онлайна.
 
 ### Что уже реализовано (подтверждающие пути)
 - WebSocket конфигурация: `src/main/java/.../adapters/inbound/websocket/WebSocketConfig.java`.
@@ -49,9 +49,6 @@
 - Базовое описание: `README.md`.
 
 ### Зазоры/недостающие компоненты
-- UI не подключен к backend контрактам (нет фактического подключения/обмена).
-- Требуется UX-логика ввода ника и прокидывание `author`/`username` в STOMP headers.
-- README не описывает полный пользовательский флоу (вход по нику, история, онлайн).
 - Соц. авторизация (опционально).
 
 ---
@@ -60,14 +57,14 @@
 
 | Требование | Статус | Доказательство (пути) | Комментарий |
 |---|---|---|---|
-| Один общий чат | Partial | `ChatWebSocketController`, `WebSocketConfig` | Канал есть, UI не интегрирован. |
-| Ввод ника перед входом | Partial | `UsernameResolver`, `ChatWebSocketController` | Есть поддержка заголовков `author/username`, но UI не реализован. |
+| Один общий чат | Done | `ChatWebSocketController`, `WebSocketConfig`, `frontend/index.html` | Канал подключен к UI. |
+| Ввод ника перед входом | Done | `UsernameResolver`, `ChatWebSocketController`, `frontend/index.html` | UI передает заголовок `username` и использует его для сессии. |
 | Последние N сообщений на входе | Done (REST) | `GetChatHistoryScenario`, `ChatHistoryApiImpl`, OpenAPI | Возвращается через `GET /api/chat/history`. |
 | Мгновенная доставка сообщений без refresh | Done | `WebSocketConfig`, `ChatWebSocketController` | WebSocket/STOMP работает. |
 | Список пользователей онлайн | Done | `OnlineUserRegistry`, `WebSocketSessionEventListener` | Есть REST и broadcast. |
 | История чата в БД | Done | `PostMessageScenario`, JPA + Liquibase | WS-поток сохраняет сообщения. |
 | Java + сервер | Done | Spring Boot project structure | Ок. |
-| Исходники + артефакт + инструкции | Partial | `README.md`, `Dockerfile`, `docker-compose.yml` | Нужны инструкции по использованию. |
+| Исходники + артефакт + инструкции | Done | `README.md`, `Dockerfile`, `docker-compose.yml` | Добавлены инструкции по использованию. |
 | Не использовать готовые webchat движки | Done | — | В проекте не обнаружено. |
 | Docker образ | Done | `Dockerfile`, `docker-compose.yml` | Уже есть. |
 | Hibernate/JPA | Done | JPA репозитории/сущности | Уже есть. |
@@ -93,7 +90,7 @@
 
 **Результат:** in-memory реестр, broadcast `/topic/chat.users`, REST `GET /api/chat/users`.
 
-#### Task B2. Определение никнейма пользователя (Partial)
+#### Task B2. Определение никнейма пользователя ✅
 - **Подзадача B2.1**: Закрепить протокол передачи ника (header, initial message, query param).
   - **DoD:** имя пользователя стабильно доступно серверу.
   - **Затронутые модули:** `UsernameResolver`, `WebSocketConfig`, UI.
@@ -103,7 +100,7 @@
 
 ---
 
-### Epic C. UI/Frontend (страница чата)
+### Epic C. UI/Frontend (страница чата) ✅
 
 **Цель:** минимальный клиентский интерфейс без готовых движков.
 
@@ -117,7 +114,7 @@
   - **DoD:** список соответствий между UI событиями и backend endpoints (`/ws`, `/app/**`, `/topic/**`, REST).
   - **Риски/вопросы:** различия в формате payload и именах топиков; отсутствие авторизации.
 
-#### Task C1. Страница ввода ника и подключение к WebSocket
+#### Task C1. Страница ввода ника и подключение к WebSocket ✅
 - **Подзадача C1.1**: HTML/CSS/JS страница с формой ввода ника.
   - **DoD:** пользователь вводит ник и подключается к чату (передаёт `author/username`).
   - **Затронутые модули:** `frontend/**` (приоритет) или `src/main/resources/static/**` (fallback).
@@ -127,7 +124,7 @@
   - **DoD:** после подключения подписки на `/topic/chat.messages` и `/topic/chat.users`, первичная загрузка списка пользователей и истории через REST.
   - **Риски/вопросы:** необходимость SockJS клиента.
 
-#### Task C2. Отображение истории и новых сообщений
+#### Task C2. Отображение истории и новых сообщений ✅
 - **Подзадача C2.1**: Получать history и показывать в хронологическом порядке.
   - **DoD:** последние N сообщений отображаются сразу.
   - **Подход:** REST `GET /api/chat/history?limit=N` (ASC по времени).
@@ -135,17 +132,17 @@
 - **Подзадача C2.2**: Отправка сообщений и мгновенное отображение.
   - **DoD:** сообщение появляется у всех подключенных клиентов.
 
-#### Task C3. Список онлайн пользователей
+#### Task C3. Список онлайн пользователей ✅
 - **Подзадача C3.1**: UI-виджет списка пользователей.
   - **DoD:** список обновляется при connect/disconnect.
 
 ---
 
-### Epic D. Документация (минимальные инструкции)
+### Epic D. Документация (минимальные инструкции) ✅
 
 **Цель:** понятные инструкции для сборки/запуска/использования.
 
-#### Task D1. README секции
+#### Task D1. README секции ✅
 - **DoD:** описано как собрать, как запускать, как пользоваться (включая N сообщений, вход по нику, online list).
 - **Затронутые модули:** `README.md`.
 - **Подход:** краткий step-by-step + параметры конфигурации.
