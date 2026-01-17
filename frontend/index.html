@@ -151,6 +151,62 @@
     padding: 14px;
   }
 
+  .join{
+    position:fixed;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    gap:12px;
+    background: rgba(5,6,7,.92);
+    backdrop-filter: blur(8px);
+    z-index: 10;
+    padding: 24px;
+    text-align:center;
+  }
+
+  .join__title{
+    font-size:1.2rem;
+    color: var(--neon2);
+    letter-spacing:.4px;
+    text-transform: uppercase;
+  }
+
+  .join__label{
+    font-size:.85rem;
+    color: var(--muted);
+  }
+
+  .join__input{
+    width: min(320px, 90vw);
+    padding:10px 12px;
+    border-radius: 12px;
+    border:1px solid rgba(0,255,120,.25);
+    background: rgba(0,0,0,.4);
+    color: var(--text);
+    font-size:1rem;
+  }
+
+  .join__actions{
+    margin-top:6px;
+  }
+
+  .btn-primary{
+    padding:10px 18px;
+    border-radius: 999px;
+    border:1px solid rgba(0,255,120,.3);
+    background: rgba(0,255,120,.12);
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing:.4px;
+    cursor:pointer;
+  }
+
+  .btn-primary:hover{
+    background: rgba(0,255,120,.22);
+  }
+
   /* Panel titles */
   .main > div:last-child > div:first-child{
     color: rgba(0,255,120,.82);
@@ -623,25 +679,9 @@ button{
       const nicknameEl = document.getElementById('nickname');
       const logoutBtn = document.getElementById('logoutBtn');
 
-      const tokenStore = {
-        accessToken: localStorage.getItem('access_token') || '',
-        refreshToken: localStorage.getItem('refresh_token') || ''
+      const storage = {
+        username: localStorage.getItem('chat_username') || ''
       };
-
-      function decodeJwt(token) {
-        try {
-          const payload = token.split('.')[1];
-          const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
-          return JSON.parse(decodeURIComponent(escape(json)));
-        } catch (error) {
-          return null;
-        }
-      }
-
-      function resolveNickname(token) {
-        const payload = decodeJwt(token) || {};
-        return payload.preferred_username || payload.name || payload.sub || 'user';
-      }
 
       function setStatus(text) {
         statusEl.textContent = `Статус: ${text}`;
@@ -673,16 +713,19 @@ button{
       }
 
 
-     function renderMessage({ author, content, timestamp }) {
+     function renderMessage(message) {
       const shouldStick = isNearBottom(messagesEl);
-    
+      const author = message.author || message.authorId || 'unknown';
+      const content = message.text || message.content || '';
+      const timestamp = message.createdAt || message.timestamp || new Date().toISOString();
+
       const item = document.createElement('div');
-    
-      const isMe = String(author) === String(nicknameEl.textContent || nickname);
+
+      const isMe = String(author) === String(nicknameEl.textContent || storage.username || '');
       item.className = `message ${isMe ? 'me' : 'other'}`;
-    
+
       const time = new Date(timestamp).toLocaleTimeString();
-    
+
       item.innerHTML = `
         <div>
           <span class="author">${escapeHtml(author)}:</span>
@@ -690,9 +733,9 @@ button{
         </div>
         <div class="meta">${escapeHtml(time)}</div>
       `;
-    
+
       messagesEl.appendChild(item);
-    
+
       if (shouldStick) {
         scrollToBottom(); // внутри requestAnimationFrame
       }
@@ -716,27 +759,23 @@ button{
         let sock = null;
         let connecting = false;
         let manualClose = false;
+        let activeUsername = '';
 
-        function connect() {
+        function connect(username) {
           if (connecting || manualClose) {
             return;
           }
+          activeUsername = String(username || '').trim();
           connecting = true;
           setStatus('подключение...');
           sock = new SockJS('/ws');
           stompClient = Stomp.over(sock);
           stompClient.debug = null;
 
-          const headers = {
-            Authorization: `Bearer ${tokenStore.accessToken}`
-          };
+          const headers = activeUsername ? { username: activeUsername } : {};
 
           sock.onclose = (event) => {
             if (manualClose) {
-              return;
-            }
-            if (event && event.code === 1008) {
-              handleAuthError();
               return;
             }
             scheduleReconnect();
@@ -748,22 +787,17 @@ button{
               connecting = false;
               reconnectAttempts = 0;
               setStatus('подключено');
-              stompClient.subscribe('/topic/chat', (message) => {
+              stompClient.subscribe('/topic/chat.messages', (message) => {
                 const body = JSON.parse(message.body);
                 renderMessage(body);
               });
-              stompClient.subscribe('/topic/participants', (message) => {
+              stompClient.subscribe('/topic/chat.users', (message) => {
                 const list = JSON.parse(message.body);
                 renderParticipants(list);
               });
             },
-            (errorFrame) => {
+            () => {
               connecting = false;
-              const errorMessage = errorFrame && errorFrame.headers && errorFrame.headers.message;
-              if (errorMessage && errorMessage.toLowerCase().includes('unauthorized')) {
-                handleAuthError();
-                return;
-              }
               scheduleReconnect();
             }
           );
@@ -795,67 +829,67 @@ button{
             return;
           }
           const payload = {
-            author,
-            content,
-            timestamp: new Date().toISOString()
+            text: content
           };
-          try {
-            stompClient.send('/app/chat.send', {}, JSON.stringify(payload));
-          } catch (error) {
-            handleAuthError();
-          }
-        }
-
-        function handleAuthError() {
-          setStatus('обновление токена');
-          refreshToken()
-            .then((newToken) => {
-              tokenStore.accessToken = newToken;
-              localStorage.setItem('access_token', newToken);
-              manualClose = false;
-              connect();
-            })
-            .catch(() => {
-              setStatus('нужно перелогиниться');
-            });
-        }
-
-        function refreshToken() {
-          return fetch('/auth/refresh', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ refreshToken: tokenStore.refreshToken })
-          })
-            .then((response) => {
-              if (!response.ok) {
-                throw new Error('Refresh failed');
-              }
-              return response.json();
-            })
-            .then((data) => {
-              return data.accessToken || data.token || '';
-            });
-        }
-
-        function clearTokens() {
-          tokenStore.accessToken = '';
-          tokenStore.refreshToken = '';
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
+          const resolvedAuthor = String(author || activeUsername || '').trim();
+          const headers = resolvedAuthor ? { author: resolvedAuthor } : {};
+          stompClient.send('/app/chat.send', headers, JSON.stringify(payload));
         }
 
         return {
           connect,
           disconnect,
-          sendMessage,
-          clearTokens
+          sendMessage
         };
       })();
 
-      const nickname = resolveNickname(tokenStore.accessToken);
-      nicknameEl.textContent = nickname;
+      function requestNickname() {
+        const form = document.createElement('form');
+        form.className = 'join';
+        form.innerHTML = `
+          <div class="join__title">Введите ник для входа в чат</div>
+          <label class="join__label" for="joinNickname">Ник</label>
+          <input id="joinNickname" class="join__input" type="text" maxlength="32" autocomplete="nickname" required />
+          <div class="join__actions">
+            <button class="btn-primary" type="submit">Войти</button>
+          </div>
+        `;
+
+        document.body.appendChild(form);
+        const input = form.querySelector('#joinNickname');
+        input.value = storage.username;
+        input.focus();
+
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const value = String(input.value || '').trim();
+          if (!value) {
+            input.focus();
+            return;
+          }
+          storage.username = value;
+          localStorage.setItem('chat_username', value);
+          nicknameEl.textContent = value;
+          form.remove();
+          ChatSocketService.connect(value);
+          fetch('/api/chat/history?limit=50')
+            .then((response) => response.json())
+            .then((history) => {
+              messagesEl.innerHTML = '';
+              const messages = history && history.messages ? history.messages : [];
+              messages.forEach((message) => renderMessage(message));
+            })
+            .catch(() => {
+              setStatus('ошибка загрузки истории');
+            });
+          fetch('/api/chat/users')
+            .then((response) => response.json())
+            .then((usersResponse) => renderParticipants(usersResponse && usersResponse.users ? usersResponse.users : []))
+            .catch(() => {
+              setStatus('ошибка загрузки списка пользователей');
+            });
+        });
+      }
 
       messageForm.addEventListener('submit', (event) => {
         event.preventDefault();
@@ -863,17 +897,16 @@ button{
         if (!content) {
           return;
         }
-        ChatSocketService.sendMessage(content, nickname);
+        ChatSocketService.sendMessage(content, nicknameEl.textContent || storage.username || 'guest');
         messageInput.value = '';
       });
 
       logoutBtn.addEventListener('click', () => {
         ChatSocketService.disconnect();
-        ChatSocketService.clearTokens();
         setStatus('отключено');
       });
 
-      ChatSocketService.connect();
+      requestNickname();
     })();
   </script>
 </body>

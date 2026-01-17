@@ -16,6 +16,16 @@ public class UsernameResolver {
     }
 
     public String resolve(StompHeaderAccessor accessor) {
+        Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
+        if (sessionAttributes != null) {
+            for (String headerName : properties.getUsernameHeaderNames()) {
+                Object value = sessionAttributes.get(headerName);
+                if (value instanceof String candidate && !candidate.isBlank()) {
+                    return candidate.trim();
+                }
+            }
+        }
+
         String principalName = Optional.ofNullable(accessor.getUser())
                 .map(Object::toString)
                 .map(String::trim)

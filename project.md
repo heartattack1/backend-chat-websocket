@@ -99,6 +99,7 @@
   - **Затронутые модули:** `UsernameResolver`, `WebSocketConfig`, UI.
   - **Текущее состояние:** поддерживаются STOMP headers `username`/`author` с fallback `guest-<session>`, но UI/клиент не реализованы.
   - **Риски/вопросы:** защита от пустых/дубликатов имен, UX ввода.
+  - ✅ **Готово:** UI запрашивает ник и передает его через STOMP header `username`, сервер читает header/атрибуты с handshake и использует для presence. 
 
 ---
 
