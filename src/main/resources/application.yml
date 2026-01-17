@@ -30,3 +30,6 @@ chat:
       - username
       - author
     guest-prefix: guest-
+  websocket:
+    allowed-origins:
+      - http://localhost:8080
