@@ -78,11 +78,48 @@
       statusEl.textContent = message;
     }
 
+    let authInProgress = false;
+
+    function handleTokenPayload(payload) {
+      if (!payload || authInProgress) {
+        return;
+      }
+      const accessToken = payload.access_token || payload.accessToken;
+      if (!accessToken) {
+        return;
+      }
+      authInProgress = true;
+      setStatus('Проверяем токен...');
+      fetch('/api/auth/yandex', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access_token: accessToken })
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('auth_failed');
+          }
+          window.location.href = '/';
+        })
+        .catch((error) => {
+          console.error(error);
+          authInProgress = false;
+          setStatus('Ошибка авторизации. Проверьте токен или настройки приложения.');
+        });
+    }
+
     function startAuth(config) {
       if (!window.YaAuthSuggest || !window.YaAuthSuggest.init) {
         setStatus('OAuth-кнопка недоступна. Проверьте блокировщики или доступ к yastatic.net.');
         return;
       }
+
+      window.addEventListener('message', (event) => {
+        if (config.tokenPageOrigin && event.origin !== config.tokenPageOrigin) {
+          return;
+        }
+        handleTokenPayload(event.data);
+      });
 
       window.YaAuthSuggest.init(
         {
@@ -101,24 +138,7 @@
         }
       )
         .then(({ handler }) => handler())
-        .then((data) => {
-          const accessToken = data && (data.access_token || data.accessToken);
-          if (!accessToken) {
-            throw new Error('missing_token');
-          }
-          setStatus('Проверяем токен...');
-          return fetch('/api/auth/yandex', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ access_token: accessToken })
-          });
-        })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error('auth_failed');
-          }
-          window.location.href = '/';
-        })
+        .then((data) => handleTokenPayload(data))
         .catch((error) => {
           console.error(error);
           if (error && error.code === 'not_available') {
