@@ -1,7 +1,10 @@
 package com.example.backendchatwebsocket.application.scenario;
 
+import com.example.backendchatwebsocket.application.command.PostMessageCommand;
 import com.example.backendchatwebsocket.application.event.ChatMessageEvent;
-import java.time.Instant;
+import com.example.backendchatwebsocket.domain.model.ChatMessage;
+import com.example.backendchatwebsocket.domain.model.UserId;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +14,11 @@ import org.springframework.stereotype.Service;
 public class PostChatMessageScenario implements Scenario<Void, ChatMessageEvent, PostChatMessageScenario.Request> {
     private static final int MAX_LENGTH = 1000;
     private final Logger logger = LoggerFactory.getLogger(PostChatMessageScenario.class);
+    private final PostMessageScenario postMessageScenario;
+
+    public PostChatMessageScenario(PostMessageScenario postMessageScenario) {
+        this.postMessageScenario = postMessageScenario;
+    }
 
     @Override
     public ChatMessageEvent execute(Request request) {
@@ -18,10 +26,10 @@ public class PostChatMessageScenario implements Scenario<Void, ChatMessageEvent,
         String normalizedText = normalizeText(request.text());
         validateText(normalizedText);
 
-        String id = UUID.randomUUID().toString();
-        Instant createdAt = Instant.now();
+        UserId authorUserId = toAuthorUserId(normalizedAuthor);
+        ChatMessage savedMessage = postMessageScenario.execute(new PostMessageCommand(authorUserId, normalizedText));
 
-        ChatMessageEvent event = new ChatMessageEvent(id, normalizedText, normalizedAuthor, createdAt);
+        ChatMessageEvent event = ChatMessageEvent.from(savedMessage, normalizedAuthor);
         logMessage(event);
         return event;
     }
@@ -58,6 +66,11 @@ public class PostChatMessageScenario implements Scenario<Void, ChatMessageEvent,
                 event.getText().length(),
                 sanitizedText
         );
+    }
+
+    private UserId toAuthorUserId(String author) {
+        UUID stableUserId = UUID.nameUUIDFromBytes(author.getBytes(StandardCharsets.UTF_8));
+        return new UserId(stableUserId);
     }
 
     public record Request(String author, String text) {
