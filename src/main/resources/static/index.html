@@ -135,6 +135,31 @@
     box-shadow: 0 0 12px rgba(255,77,109,.32);
   }
 
+  .error-toast {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    max-width: 320px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: rgba(59, 10, 10, 0.95);
+    border: 1px solid rgba(255, 92, 92, 0.8);
+    color: #ffd6d6;
+    font-size: 14px;
+    line-height: 1.4;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 10;
+  }
+
+  .error-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
   .nickname{
     font-weight:700;
     color: rgba(210,255,230,.90);
@@ -641,6 +666,7 @@ button{
 <body>
   <div class="matrix-rain" aria-hidden="true"></div>
   <div class="container">
+    <div class="error-toast" id="errorToast" role="alert" aria-live="assertive"></div>
     <div class="header">
       <div>
         <div class="channel-title" data-text="#monero gpu mining discussion">#monero gpu mining discussion</div>
@@ -678,6 +704,9 @@ button{
       const messageInput = document.getElementById('messageInput');
       const nicknameEl = document.getElementById('nickname');
       const logoutBtn = document.getElementById('logoutBtn');
+      const errorToastEl = document.getElementById('errorToast');
+
+      let errorToastTimer = null;
 
       const storage = {
         username: localStorage.getItem('chat_username') || ''
@@ -694,6 +723,20 @@ button{
 
       function setNickname(value) {
         nicknameEl.textContent = value || '...';
+      }
+
+      function showErrorToast(message) {
+        if (!errorToastEl) {
+          return;
+        }
+        errorToastEl.textContent = message;
+        errorToastEl.classList.add('show');
+        if (errorToastTimer) {
+          clearTimeout(errorToastTimer);
+        }
+        errorToastTimer = setTimeout(() => {
+          errorToastEl.classList.remove('show');
+        }, 4000);
       }
 
       function escapeHtml(str) {
@@ -816,6 +859,16 @@ button{
               stompClient.subscribe('/topic/chat.users', (message) => {
                 const payload = JSON.parse(message.body);
                 renderParticipants(payload);
+              });
+              stompClient.subscribe('/user/queue/errors', (message) => {
+                let payload = null;
+                try {
+                  payload = JSON.parse(message.body);
+                } catch (error) {
+                  payload = { message: message.body };
+                }
+                const errorMessage = payload && payload.message ? payload.message : 'Ошибка отправки сообщения';
+                showErrorToast(errorMessage);
               });
               refreshParticipants();
             },
