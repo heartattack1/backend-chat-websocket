@@ -83,7 +83,8 @@
 
 **Цель:** любое сообщение, отправленное через WebSocket, сохраняется в БД и доступно для выдачи последних N сообщений при входе.
 
-#### Task A1. Интеграция WebSocket-сценария с сохранением сообщений
+#### Task A1. Интеграция WebSocket-сценария с сохранением сообщений ✅
+> Итог: WebSocket-поток использует доменный `PostMessageScenario` для сохранения сообщений и эмитит события с ULID и временем из сохраненной доменной модели.
 - **Подзадача A1.1**: Привязать `PostChatMessageScenario` к доменному `PostMessageScenario` или вынести единый сервис.
   - **DoD:** при отправке через `/app/chat.send` сообщение сохраняется в таблице сообщений.
   - **Затронутые модули:** `application/scenario/PostChatMessageScenario`, `application/scenario/PostMessageScenario`, `domain/repository/ChatMessageRepository`.

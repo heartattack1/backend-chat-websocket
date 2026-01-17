@@ -1,5 +1,6 @@
 package com.example.backendchatwebsocket.application.event;
 
+import com.example.backendchatwebsocket.domain.model.ChatMessage;
 import java.time.Instant;
 
 public final class ChatMessageEvent {
@@ -13,6 +14,15 @@ public final class ChatMessageEvent {
         this.text = text;
         this.author = author;
         this.createdAt = createdAt;
+    }
+
+    public static ChatMessageEvent from(ChatMessage message, String author) {
+        return new ChatMessageEvent(
+                message.getId().value(),
+                message.getText(),
+                author,
+                message.getCreatedAt()
+        );
     }
 
     public String getId() {
