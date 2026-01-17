@@ -2,6 +2,7 @@ package com.example.backendchatwebsocket.application.presence;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,5 +22,13 @@ public class OnlineUserRegistry {
 
     public Collection<String> listUsernames() {
         return Collections.unmodifiableCollection(sessions.values());
+    }
+
+    public List<String> listDistinctUsernames() {
+        return sessions.values().stream()
+                .filter(username -> username != null && !username.isBlank())
+                .distinct()
+                .sorted()
+                .toList();
     }
 }
