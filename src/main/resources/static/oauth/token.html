@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OAuth Token</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #050607;
+      color: #e6fff0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div>Авторизация завершена. Можно закрыть окно.</div>
+  <script>
+    (function () {
+      const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
+      const params = new URLSearchParams(hash);
+      const payload = Object.fromEntries(params.entries());
+      if (window.opener && Object.keys(payload).length > 0) {
+        window.opener.postMessage(payload, window.location.origin);
+      }
+      if (window.parent && window.parent !== window && Object.keys(payload).length > 0) {
+        window.parent.postMessage(payload, window.location.origin);
+      }
+    })();
+  </script>
+</body>
+</html>
