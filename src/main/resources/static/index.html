@@ -746,8 +746,13 @@ button{
 
 
       function renderParticipants(list) {
+        const normalizedList = Array.isArray(list)
+          ? list
+          : list && Array.isArray(list.users)
+            ? list.users
+            : [];
         participantsEl.innerHTML = '';
-        list.forEach((name) => {
+        normalizedList.forEach((name) => {
           const item = document.createElement('div');
           item.textContent = name;
           participantsEl.appendChild(item);
@@ -800,8 +805,8 @@ button{
                 renderMessage(body);
               });
               stompClient.subscribe('/topic/chat.users', (message) => {
-                const list = JSON.parse(message.body);
-                renderParticipants(list);
+                const payload = JSON.parse(message.body);
+                renderParticipants(payload);
               });
             },
             () => {
