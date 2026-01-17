@@ -1,6 +1,7 @@
 package com.example.backendchatwebsocket.adapters.inbound.websocket;
 
 import com.example.backendchatwebsocket.application.presence.PresenceProperties;
+import com.example.backendchatwebsocket.application.websocket.WebSocketProperties;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -18,16 +19,18 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private final PresenceProperties presenceProperties;
+    private final WebSocketProperties webSocketProperties;
 
-    public WebSocketConfig(PresenceProperties presenceProperties) {
+    public WebSocketConfig(PresenceProperties presenceProperties, WebSocketProperties webSocketProperties) {
         this.presenceProperties = presenceProperties;
+        this.webSocketProperties = webSocketProperties;
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
                 .addInterceptors(new UsernameHandshakeInterceptor(presenceProperties))
-                .setAllowedOriginPatterns("*")
+                .setAllowedOriginPatterns(webSocketProperties.getAllowedOrigins().toArray(String[]::new))
                 .withSockJS();
     }
 
