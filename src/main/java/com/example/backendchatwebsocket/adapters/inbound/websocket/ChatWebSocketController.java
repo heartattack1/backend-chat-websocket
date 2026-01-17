@@ -24,7 +24,10 @@ public class ChatWebSocketController {
                                Principal principal,
                                @Header(name = "author", required = false) String authorHeader) {
         String author = resolveAuthor(principal, authorHeader);
-        String text = request == null ? null : request.getText();
+        if (request == null) {
+            throw new IllegalArgumentException("Message payload must not be empty");
+        }
+        String text = request.getText();
         ChatMessageEvent event = postChatMessageScenario.execute(new PostChatMessageCommand(author, text));
         chatBroadcaster.broadcast(event);
     }
