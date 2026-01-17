@@ -1,12 +1,12 @@
 package com.example.backendchatwebsocket.application.scenario;
 
-import com.example.backendchatwebsocket.domain.model.ChatMessage;
+import com.example.backendchatwebsocket.domain.model.ChatMessageWithAuthor;
 import com.example.backendchatwebsocket.domain.repository.ChatMessageRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
-public class GetChatHistoryScenario implements Scenario<Void, List<ChatMessage>, GetChatHistoryScenario.Request> {
+public class GetChatHistoryScenario implements Scenario<Void, List<ChatMessageWithAuthor>, GetChatHistoryScenario.Request> {
     public static final int DEFAULT_LIMIT = 50;
     public static final int MAX_LIMIT = 100;
 
@@ -17,9 +17,9 @@ public class GetChatHistoryScenario implements Scenario<Void, List<ChatMessage>,
     }
 
     @Override
-    public List<ChatMessage> execute(Request request) {
+    public List<ChatMessageWithAuthor> execute(Request request) {
         int limit = resolveLimit(request);
-        return chatMessageRepository.findLastN(limit);
+        return chatMessageRepository.findLastNWithAuthor(limit);
     }
 
     private int resolveLimit(Request request) {

@@ -6,7 +6,7 @@ import com.example.backendchat.api.model.ChatMessageResponse;
 import com.example.backendchat.api.model.ChatUsersResponse;
 import com.example.backendchatwebsocket.application.presence.OnlineUserRegistry;
 import com.example.backendchatwebsocket.application.scenario.GetChatHistoryScenario;
-import com.example.backendchatwebsocket.domain.model.ChatMessage;
+import com.example.backendchatwebsocket.domain.model.ChatMessageWithAuthor;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -20,14 +20,15 @@ public class ChatHistoryApiImpl implements ChatApi {
     private final GetChatHistoryScenario getChatHistoryScenario;
     private final OnlineUserRegistry onlineUserRegistry;
 
-    public ChatHistoryApiImpl(GetChatHistoryScenario getChatHistoryScenario, OnlineUserRegistry onlineUserRegistry) {
+    public ChatHistoryApiImpl(GetChatHistoryScenario getChatHistoryScenario,
+                              OnlineUserRegistry onlineUserRegistry) {
         this.getChatHistoryScenario = getChatHistoryScenario;
         this.onlineUserRegistry = onlineUserRegistry;
     }
 
     @Override
     public ResponseEntity<ChatHistoryResponse> getChatHistory(Integer limit) {
-        List<ChatMessage> history = getChatHistoryScenario.execute(new GetChatHistoryScenario.Request(limit));
+        List<ChatMessageWithAuthor> history = getChatHistoryScenario.execute(new GetChatHistoryScenario.Request(limit));
         ChatHistoryResponse response = new ChatHistoryResponse();
         response.setMessages(history.stream().map(this::toResponse).toList());
         return ResponseEntity.ok(response);
@@ -40,12 +41,13 @@ public class ChatHistoryApiImpl implements ChatApi {
         return ResponseEntity.ok(response);
     }
 
-    private ChatMessageResponse toResponse(ChatMessage message) {
+    private ChatMessageResponse toResponse(ChatMessageWithAuthor message) {
         ChatMessageResponse response = new ChatMessageResponse();
-        response.setId(message.getId().value());
-        response.setAuthorId(message.getAuthorUserId().value());
-        response.setText(message.getText());
-        response.setCreatedAt(OffsetDateTime.ofInstant(message.getCreatedAt(), ZoneOffset.UTC));
+        response.setId(message.id().value());
+        response.setAuthorId(message.authorUserId().value());
+        response.setAuthorName(message.authorName());
+        response.setText(message.text());
+        response.setCreatedAt(OffsetDateTime.ofInstant(message.createdAt(), ZoneOffset.UTC));
         return response;
     }
 }

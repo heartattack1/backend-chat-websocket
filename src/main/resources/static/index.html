@@ -718,7 +718,7 @@ button{
 
      function renderMessage(message) {
       const shouldStick = isNearBottom(messagesEl);
-      const author = message.author || message.authorId || 'unknown';
+      const author = message.authorName || message.author || message.authorId || 'unknown';
       const content = message.text || message.content || '';
       const timestamp = message.createdAt || message.timestamp || new Date().toISOString();
 
