@@ -57,8 +57,8 @@ class ChatMessageRepositoryImplTest {
 
         List<ChatMessage> lastTwo = adapter.findLastN(2);
 
-        assertThat(lastTwo).extracting(ChatMessage::getId)
-                .containsExactly(second.getId(), third.getId());
+        assertThat(lastTwo).extracting(ChatMessage::id)
+                .containsExactly(second.id(), third.id());
     }
 
     private static ChatMessage message(String id, UUID userId, String text, Instant createdAt) {

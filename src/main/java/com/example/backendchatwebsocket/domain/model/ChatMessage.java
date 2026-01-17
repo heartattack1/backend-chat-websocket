@@ -1,18 +1,10 @@
 package com.example.backendchatwebsocket.domain.model;
 
-import lombok.Getter;
-
 import java.time.Instant;
 import java.util.Objects;
 
-@Getter
-public final class ChatMessage {
-    private final MessageId id;
-    private final UserId authorUserId;
-    private final String text;
-    private final Instant createdAt;
-
-    private ChatMessage(MessageId id, UserId authorUserId, String text, Instant createdAt) {
+public record ChatMessage(MessageId id, UserId authorUserId, String text, Instant createdAt) {
+    public ChatMessage(MessageId id, UserId authorUserId, String text, Instant createdAt) {
         this.id = Objects.requireNonNull(id, "Message id is required");
         this.authorUserId = Objects.requireNonNull(authorUserId, "Author user id is required");
         if (text == null || text.isBlank()) {

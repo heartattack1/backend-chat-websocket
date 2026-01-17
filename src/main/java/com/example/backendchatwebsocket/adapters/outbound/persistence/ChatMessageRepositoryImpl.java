@@ -32,7 +32,7 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
         List<ChatMessageEntity> entities = repository.findAllByOrderByCreatedAtDescIdDesc(pageable);
         return entities.stream()
                 .map(this::toDomain)
-                .sorted(Comparator.comparing(ChatMessage::getCreatedAt).thenComparing(message -> message.getId().value()))
+                .sorted(Comparator.comparing(ChatMessage::createdAt).thenComparing(message -> message.id().value()))
                 .collect(Collectors.toList());
     }
 
@@ -54,10 +54,10 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
 
     ChatMessageEntity toEntity(ChatMessage message) {
         return new ChatMessageEntity(
-                message.getId().value(),
-                message.getAuthorUserId().value(),
-                message.getText(),
-                message.getCreatedAt());
+                message.id().value(),
+                message.authorUserId().value(),
+                message.text(),
+                message.createdAt());
     }
 
     ChatMessage toDomain(ChatMessageEntity entity) {

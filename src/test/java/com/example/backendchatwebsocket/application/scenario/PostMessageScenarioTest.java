@@ -30,8 +30,8 @@ class PostMessageScenarioTest {
         UserId authorUserId = new UserId(UUID.randomUUID());
         ChatMessage message = scenario.execute(new PostMessageCommand(authorUserId, "Hello world"));
 
-        assertEquals(generatedId, message.getId());
-        assertEquals(now, message.getCreatedAt());
+        assertEquals(generatedId, message.id());
+        assertEquals(now, message.createdAt());
         assertSame(message, repository.lastSaved());
     }
 

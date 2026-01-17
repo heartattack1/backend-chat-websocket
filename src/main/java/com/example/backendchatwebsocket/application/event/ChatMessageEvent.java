@@ -18,10 +18,10 @@ public final class ChatMessageEvent {
 
     public static ChatMessageEvent from(ChatMessage message, String author) {
         return new ChatMessageEvent(
-                message.getId().value(),
-                message.getText(),
+                message.id().value(),
+                message.text(),
                 author,
-                message.getCreatedAt()
+                message.createdAt()
         );
     }
 

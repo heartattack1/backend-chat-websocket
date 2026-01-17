@@ -40,15 +40,15 @@ public class JpaUserRepositoryAdapter implements UserRepository {
 
     private UserEntity toEntity(User user) {
         return new UserEntity(
-                user.getId().value(),
-                user.getProvider(),
-                user.getProviderUserId(),
-                user.getDisplayName(),
-                user.getProfileUrl(),
-                user.getLastLoginAt(),
+                user.id().value(),
+                user.provider(),
+                user.providerUserId(),
+                user.displayName(),
+                user.profileUrl(),
+                user.lastLoginAt(),
                 user.isActive(),
-                user.getCreatedAt(),
-                user.getUpdatedAt()
+                user.createdAt(),
+                user.updatedAt()
         );
     }
 }
