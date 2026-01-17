@@ -40,6 +40,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ChatHistoryResponse'
+  /api/chat/users:
+    get:
+      tags:
+        - chat
+      summary: Get online chat users
+      operationId: getChatUsers
+      responses:
+        '200':
+          description: Current list of online users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatUsersResponse'
 components:
   schemas:
     ChatHistoryResponse:
@@ -51,6 +64,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ChatMessageResponse'
+    ChatUsersResponse:
+      type: object
+      required:
+        - users
+      properties:
+        users:
+          type: array
+          items:
+            type: string
     ChatMessageResponse:
       type: object
       required:

@@ -2,6 +2,7 @@ package com.example.backendchatwebsocket.adapters.inbound.websocket;
 
 import com.example.backendchatwebsocket.application.presence.OnlineUserRegistry;
 import com.example.backendchatwebsocket.application.presence.UsernameResolver;
+import com.example.backendchatwebsocket.application.port.OnlineUsersBroadcaster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -15,10 +16,15 @@ public class WebSocketSessionEventListener {
     private final Logger logger = LoggerFactory.getLogger(WebSocketSessionEventListener.class);
     private final OnlineUserRegistry onlineUserRegistry;
     private final UsernameResolver usernameResolver;
+    private final OnlineUsersBroadcaster onlineUsersBroadcaster;
 
-    public WebSocketSessionEventListener(OnlineUserRegistry onlineUserRegistry, UsernameResolver usernameResolver) {
+    public WebSocketSessionEventListener(
+            OnlineUserRegistry onlineUserRegistry,
+            UsernameResolver usernameResolver,
+            OnlineUsersBroadcaster onlineUsersBroadcaster) {
         this.onlineUserRegistry = onlineUserRegistry;
         this.usernameResolver = usernameResolver;
+        this.onlineUsersBroadcaster = onlineUsersBroadcaster;
     }
 
     @EventListener
@@ -27,6 +33,7 @@ public class WebSocketSessionEventListener {
         String sessionId = accessor.getSessionId();
         String username = usernameResolver.resolve(accessor);
         onlineUserRegistry.register(sessionId, username);
+        onlineUsersBroadcaster.broadcast(onlineUserRegistry.listDistinctUsernames());
         logger.info("websocket_session_connected sessionId={} username={}", sessionId, username);
     }
 
@@ -34,6 +41,7 @@ public class WebSocketSessionEventListener {
     public void handleSessionDisconnected(SessionDisconnectEvent event) {
         String sessionId = event.getSessionId();
         String username = onlineUserRegistry.remove(sessionId).orElse(null);
+        onlineUsersBroadcaster.broadcast(onlineUserRegistry.listDistinctUsernames());
         logger.info(
                 "websocket_session_disconnected sessionId={} status={} username={}",
                 sessionId,
