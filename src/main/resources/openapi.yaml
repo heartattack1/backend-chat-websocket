@@ -78,6 +78,7 @@ components:
       required:
         - id
         - authorId
+        - authorName
         - text
         - createdAt
       properties:
@@ -88,6 +89,9 @@ components:
           type: string
           format: uuid
           example: 84ea8dfa-5f6c-4d55-9905-6558d838756e
+        authorName:
+          type: string
+          example: alice
         text:
           type: string
           example: Hello!

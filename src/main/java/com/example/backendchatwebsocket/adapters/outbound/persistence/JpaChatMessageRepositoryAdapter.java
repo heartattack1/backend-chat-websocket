@@ -1,6 +1,9 @@
 package com.example.backendchatwebsocket.adapters.outbound.persistence;
 
 import com.example.backendchatwebsocket.domain.model.ChatMessage;
+import com.example.backendchatwebsocket.domain.model.ChatMessageWithAuthor;
+import com.example.backendchatwebsocket.domain.model.MessageId;
+import com.example.backendchatwebsocket.domain.model.UserId;
 import com.example.backendchatwebsocket.domain.repository.ChatMessageRepository;
 import java.util.Comparator;
 import java.util.List;
@@ -32,6 +35,22 @@ public class JpaChatMessageRepositoryAdapter implements ChatMessageRepository {
         return entities.stream()
                 .map(mapper::toDomain)
                 .sorted(Comparator.comparing(ChatMessage::getCreatedAt).thenComparing(message -> message.getId().value()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ChatMessageWithAuthor> findLastNWithAuthor(int count) {
+        Pageable pageable = PageRequest.of(0, count);
+        List<ChatMessageWithAuthorProjection> entities = repository.findAllWithAuthorByOrderByCreatedAtDescIdDesc(pageable);
+        return entities.stream()
+                .map(entity -> new ChatMessageWithAuthor(
+                        new MessageId(entity.getId()),
+                        new UserId(entity.getAuthorUserId()),
+                        entity.getAuthorName(),
+                        entity.getText(),
+                        entity.getCreatedAt()))
+                .sorted(Comparator.comparing(ChatMessageWithAuthor::createdAt)
+                        .thenComparing(message -> message.id().value()))
                 .collect(Collectors.toList());
     }
 }
