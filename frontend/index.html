@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>welcome to bitcoin talk</title>
+  <style>
+  /* ===== Dark-web / Tails / CRT terminal vibe ===== */
+  :root{
+    --bg0:#050607;
+    --bg1:#07090b;
+    --panel:#0b0f12;
+    --panel2:#070a0d;
+
+    --grid: rgba(0,255,120,.06);
+    --border: rgba(0,255,120,.18);
+    --border2: rgba(255,255,255,.08);
+
+    --text: rgba(230,255,240,.92);
+    --muted: rgba(230,255,240,.62);
+    --faint: rgba(230,255,240,.40);
+
+    --neon: #00ff70;     /* main green */
+    --neon2:#63ffb0;     /* soft green */
+    --cyan:#78e6ff;
+
+    --danger:#ff4d6d;
+    --warn:#ffd166;
+
+    --radius: 14px;
+    --shadow: 0 18px 60px rgba(0,0,0,.65);
+    --glow: 0 0 18px rgba(0,255,120,.18);
+  }
+
+  html, body { height:100%; }
+
+  body{
+    margin:0;
+    padding:22px;
+    color:var(--text);
+    background:
+      radial-gradient(900px 520px at 18% 0%, rgba(0,255,120,.10), transparent 55%),
+      radial-gradient(820px 480px at 95% 8%, rgba(120,230,255,.08), transparent 55%),
+      linear-gradient(180deg, var(--bg1), var(--bg0) 70%);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    letter-spacing:.2px;
+  }
+
+  /* Subtle CRT overlay: scanlines + vignette + noise */
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,.03) 0px,
+        rgba(255,255,255,.03) 1px,
+        rgba(0,0,0,0) 2px,
+        rgba(0,0,0,0) 4px
+      ),
+      radial-gradient(1200px 700px at 50% 10%, rgba(0,255,120,.06), transparent 60%),
+      radial-gradient(900px 900px at 50% 50%, transparent 55%, rgba(0,0,0,.50) 100%);
+    mix-blend-mode: overlay;
+    opacity:.45;
+  }
+
+  body::after{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.20'/%3E%3C/svg%3E");
+    opacity:.06;
+  }
+
+  .container{
+    max-width: 980px;
+    margin: 0 auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(11,15,18,.94), rgba(7,10,13,.92));
+    box-shadow: var(--shadow);
+    overflow:hidden;
+    position:relative;
+  }
+
+  /* Header strip */
+  .header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    padding:14px 16px;
+    border-bottom: 1px solid rgba(0,255,120,.14);
+    background:
+      linear-gradient(180deg, rgba(0,255,120,.06), rgba(0,0,0,0));
+  }
+
+  .header > div:first-child > div:first-child{
+    font-weight: 700;
+    letter-spacing:.6px;
+    text-transform: uppercase;
+    color: rgba(210,255,230,.92);
+  }
+
+  /* status pill */
+  .status{
+    margin-top:6px;
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid rgba(0,255,120,.18);
+    background: rgba(0,0,0,.22);
+    color: var(--muted);
+    box-shadow: var(--glow);
+    font-size:.82rem;
+  }
+  .status::before{
+    content:"";
+    width:8px; height:8px;
+    border-radius:999px;
+    background: var(--warn);
+    box-shadow: 0 0 10px rgba(255,209,102,.28);
+  }
+  #status[data-state="ok"]::before{
+    background: var(--neon);
+    box-shadow: 0 0 12px rgba(0,255,120,.35);
+  }
+  #status[data-state="bad"]::before{
+    background: var(--danger);
+    box-shadow: 0 0 12px rgba(255,77,109,.32);
+  }
+
+  .nickname{
+    font-weight:700;
+    color: rgba(210,255,230,.90);
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.10);
+    background: rgba(0,0,0,.18);
+  }
+
+  .main{
+    display:grid;
+    grid-template-columns: 2.2fr 1fr;
+    gap: 14px;
+    padding: 14px;
+  }
+
+  /* Panel titles */
+  .main > div:last-child > div:first-child{
+    color: rgba(0,255,120,.82);
+    letter-spacing:.4px;
+    text-transform: uppercase;
+    font-size:.85rem;
+    margin: 4px 0 10px 4px;
+  }
+
+  /* Messages and participants panels */
+  .messages, .participants{
+    border-radius: 14px;
+    border: 1px solid rgba(0,255,120,.14);
+    background:
+      linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.18)),
+      radial-gradient(700px 220px at 50% 0%, rgba(0,255,120,.08), transparent 60%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    position:relative;
+  }
+
+  /* faint grid like "secure console" */
+  .messages::before, .participants::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/ 100% 28px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/ 28px 100%;
+    opacity:.35;
+    border-radius:14px;
+    mask-image: radial-gradient(circle at 50% 0%, rgba(0,0,0,.9), rgba(0,0,0,.35) 60%, rgba(0,0,0,.0));
+  }
+
+  .messages{
+    height: 390px;
+    overflow-y:auto;
+    padding: 12px;
+  }
+
+  .participants{
+    height: 390px;
+    overflow-y:auto;
+    padding: 12px;
+  }
+
+  /* message item */
+  .message{
+    position:relative;
+    padding: 10px 10px 9px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+    background: rgba(0,0,0,.26);
+    border: 1px solid rgba(255,255,255,.06);
+    box-shadow: 0 0 0 1px rgba(0,255,120,.06) inset;
+  }
+  .message:last-child{ margin-bottom:0; }
+
+  /* "terminal" line accent */
+  .message::before{
+    content:"";
+    position:absolute;
+    left:0; top:10px; bottom:10px;
+    width:2px;
+    border-radius:2px;
+    background: rgba(0,255,120,.55);
+    box-shadow: 0 0 12px rgba(0,255,120,.25);
+  }
+
+  .message > div:first-child{
+    padding-left: 6px;
+    line-height:1.35;
+    color: rgba(230,255,240,.92);
+    word-break: break-word;
+    text-shadow: 0 0 10px rgba(0,255,120,.10);
+  }
+
+  .meta{
+    margin-top:6px;
+    padding-left: 6px;
+    font-size:.78rem;
+    color: var(--faint);
+  }
+
+  /* participants items */
+  #participants > div{
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(0,255,120,.14);
+    background: rgba(0,0,0,.22);
+    color: rgba(210,255,230,.86);
+    box-shadow: 0 0 14px rgba(0,255,120,.08);
+  }
+  #participants > div:last-child{ margin-bottom:0; }
+
+  /* input row */
+  .input-row{
+    display:flex;
+    gap: 10px;
+    margin-top: 12px;
+    align-items:center;
+  }
+
+  .input-row input{
+    flex:1;
+    padding: 12px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,255,120,.18);
+    background: rgba(0,0,0,.30);
+    color: rgba(230,255,240,.92);
+    outline:none;
+    box-shadow: 0 0 0 1px rgba(0,255,120,.06) inset;
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 120ms ease;
+  }
+  .input-row input::placeholder{
+    color: rgba(210,255,230,.36);
+  }
+  .input-row input:focus{
+    border-color: rgba(0,255,120,.45);
+    box-shadow:
+      0 0 0 4px rgba(0,255,120,.12),
+      0 0 22px rgba(0,255,120,.10);
+  }
+
+  button{
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,255,120,.22);
+    background:
+      linear-gradient(180deg, rgba(0,255,120,.12), rgba(0,0,0,.22));
+    color: rgba(210,255,230,.92);
+    cursor:pointer;
+    transition: transform 120ms ease, box-shadow 160ms ease, border-color 160ms ease, filter 160ms ease;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+  }
+  button:hover{
+    border-color: rgba(0,255,120,.40);
+    box-shadow: 0 12px 28px rgba(0,0,0,.45), 0 0 22px rgba(0,255,120,.10);
+    filter: brightness(1.05);
+  }
+  button:active{ transform: translateY(1px); }
+
+  #logoutBtn{
+    border-color: rgba(255,77,109,.22);
+    background: linear-gradient(180deg, rgba(255,77,109,.10), rgba(0,0,0,.22));
+  }
+  #logoutBtn:hover{
+    border-color: rgba(255,77,109,.42);
+    box-shadow: 0 12px 28px rgba(0,0,0,.45), 0 0 22px rgba(255,77,109,.10);
+  }
+
+  /* scrollbars */
+  .messages::-webkit-scrollbar,
+  .participants::-webkit-scrollbar{ width: 10px; }
+
+  .messages::-webkit-scrollbar-track,
+  .participants::-webkit-scrollbar-track{
+    background: rgba(0,0,0,.22);
+    border-left: 1px solid rgba(0,255,120,.10);
+  }
+
+  .messages::-webkit-scrollbar-thumb,
+  .participants::-webkit-scrollbar-thumb{
+    background: rgba(0,255,120,.18);
+    border-radius:999px;
+    border: 2px solid rgba(0,0,0,0);
+    background-clip: padding-box;
+  }
+  .messages::-webkit-scrollbar-thumb:hover,
+  .participants::-webkit-scrollbar-thumb:hover{
+    background: rgba(0,255,120,.26);
+    border: 2px solid rgba(0,0,0,0);
+    background-clip: padding-box;
+  }
+
+  /* responsive */
+  @media (max-width: 860px){
+    body{ padding: 14px; }
+    .main{ grid-template-columns: 1fr; }
+    .messages, .participants{ height: 320px; }
+    .header{ flex-direction: column; align-items:flex-start; }
+  }
+
+  .channel-title {
+    position: relative;
+    display: inline-block;
+    font-weight: 800;
+    letter-spacing: .9px;
+    text-transform: uppercase;
+    color: rgba(210,255,230,.92);
+    text-shadow:
+      0 0 12px rgba(0,255,120,.10),
+      0 0 26px rgba(0,255,120,.06);
+  }
+
+  /* Glitch layers */
+  .channel-title::before,
+  .channel-title::after{
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: .0;
+  }
+
+  .channel-title::before{
+    transform: translateX(-1px);
+    color: rgba(120,230,255,.85);
+    text-shadow: 0 0 16px rgba(120,230,255,.20);
+  }
+
+  .channel-title::after{
+    transform: translateX(1px);
+    color: rgba(255,77,109,.70);
+    text-shadow: 0 0 16px rgba(255,77,109,.18);
+  }
+
+  /* Trigger glitch on hover and occasionally via animation */
+  .channel-title:hover::before,
+  .channel-title:hover::after{
+    opacity: .9;
+    animation: glitch 420ms steps(2,end) infinite;
+  }
+
+  /* Ambient glitch pulse (subtle) */
+  .channel-title{
+    animation: glitchPulse 6.5s infinite;
+  }
+
+  @keyframes glitchPulse{
+    0%, 92%, 100% { filter: none; }
+    93% { filter: brightness(1.08) contrast(1.05); }
+    94% { filter: none; }
+    95% { filter: brightness(1.10) contrast(1.08); }
+    96% { filter: none; }
+  }
+
+  @keyframes glitch{
+    0%   { clip-path: inset(0 0 88% 0); transform: translate(-1px, -1px); }
+    20%  { clip-path: inset(12% 0 60% 0); transform: translate(2px, 0); }
+    40%  { clip-path: inset(40% 0 35% 0); transform: translate(-2px, 1px); }
+    60%  { clip-path: inset(70% 0 15% 0); transform: translate(1px, -1px); }
+    80%  { clip-path: inset(8% 0 75% 0); transform: translate(-1px, 0); }
+    100% { clip-path: inset(0 0 88% 0); transform: translate(1px, 1px); }
+  }
+
+  /* Message variants */
+  .message.me{
+    border-color: rgba(0,255,120,.20);
+    background: rgba(0,255,120,.06);
+    box-shadow:
+      0 0 0 1px rgba(0,255,120,.10) inset,
+      0 0 18px rgba(0,255,120,.08);
+  }
+
+  .message.other{
+    border-color: rgba(120,230,255,.14);
+    background: rgba(120,230,255,.04);
+    box-shadow:
+      0 0 0 1px rgba(120,230,255,.08) inset;
+  }
+
+  /* Different left accent for each */
+  .message.me::before{
+    background: rgba(0,255,120,.75);
+    box-shadow: 0 0 14px rgba(0,255,120,.25);
+  }
+
+  .message.other::before{
+    background: rgba(120,230,255,.60);
+    box-shadow: 0 0 14px rgba(120,230,255,.18);
+  }
+
+  /* Author styling inside message */
+  .message .author{
+    color: rgba(210,255,230,.92);
+  }
+
+  .message.me .author{
+    color: rgba(0,255,120,.92);
+    text-shadow: 0 0 10px rgba(0,255,120,.14);
+  }
+
+  .message.other .author{
+    color: rgba(120,230,255,.92);
+    text-shadow: 0 0 10px rgba(120,230,255,.12);
+  }
+
+  /* Align "me" slightly to the right for chat feel */
+  .message.me{
+    margin-left: 10%;
+  }
+  .message.other{
+    margin-right: 10%;
+  }
+
+  @media (max-width: 860px){
+    .message.me{ margin-left: 0; }
+    .message.other{ margin-right: 0; }
+  }
+  /* ===== Angular / serious: no rounded corners ===== */
+:root{
+  --radius: 0px; /* override */
+}
+
+/* Global kill-switch for roundness */
+.container,
+.messages, .participants,
+.messages::before, .participants::before,
+.message,
+.input-row input,
+button,
+.nickname,
+.status,
+#participants > div {
+  border-radius: 0 !important;
+}
+
+/* Status dot can stay round; if you want it square too: */
+.status::before{
+  border-radius: 0 !important;
+}
+
+/* Message accent bar: remove rounding */
+.message::before{
+  border-radius: 0 !important;
+}
+
+/* Scrollbar: square thumb */
+.messages::-webkit-scrollbar-thumb,
+.participants::-webkit-scrollbar-thumb{
+  border-radius: 0 !important;
+}
+
+/* Optional: sharper, more "panel" feel */
+.container{
+  border: 1px solid rgba(0,255,120,.22) !important;
+}
+
+.header{
+  border-bottom: 1px solid rgba(0,255,120,.18) !important;
+}
+
+/* Make participants items look like list rows instead of pills */
+#participants > div{
+  border-left: 2px solid rgba(0,255,120,.35);
+  margin-bottom: 6px;
+}
+
+/* Make status/nickname feel like tags (not pills) */
+.status, .nickname{
+  padding: 6px 10px;
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+/* Tighten buttons into "command keys" */
+button{
+  border-width: 1px;
+  border-style: solid;
+}
+/* ===== Matrix digital rain background ===== */
+.matrix-rain{
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: .22;              /* регулируй интенсивность */
+  mix-blend-mode: screen;    /* красиво смешивается с темным фоном */
+  filter: saturate(1.15) contrast(1.05);
+}
+
+/* keep your UI above the rain */
+.container{ position: relative; z-index: 2; }
+
+/* Rain built from 2 layers of repeating gradients that "fall" */
+.matrix-rain::before,
+.matrix-rain::after{
+  content:"";
+  position:absolute;
+  inset:-200% 0 0 0; /* extra height for smooth scroll */
+  background:
+    /* columns with glyph blocks */
+    repeating-linear-gradient(
+      90deg,
+      rgba(0,255,120,.00) 0px,
+      rgba(0,255,120,.00) 10px,
+      rgba(0,255,120,.10) 12px,
+      rgba(0,255,120,.00) 14px
+    ),
+    /* vertical "drops" */
+    repeating-linear-gradient(
+      180deg,
+      rgba(0,255,120,.00) 0px,
+      rgba(0,255,120,.00) 14px,
+      rgba(0,255,120,.22) 16px,
+      rgba(0,255,120,.00) 22px
+    );
+  background-size: 22px 100%, 100% 26px;
+  transform: translateY(-50%);
+  animation: matrixFall 12s linear infinite;
+}
+
+/* second layer: different speed + slight blur for depth */
+.matrix-rain::after{
+  opacity: .55;
+  filter: blur(.35px);
+  background-size: 28px 100%, 100% 34px;
+  animation: matrixFall2 18s linear infinite;
+}
+
+@keyframes matrixFall{
+  from { transform: translateY(-50%); }
+  to   { transform: translateY(0%); }
+}
+
+@keyframes matrixFall2{
+  from { transform: translateY(-60%); }
+  to   { transform: translateY(0%); }
+}
+
+</style>
+
+
+</head>
+<body>
+  <div class="matrix-rain" aria-hidden="true"></div>
+  <div class="container">
+    <div class="header">
+      <div>
+        <div class="channel-title" data-text="#monero gpu mining discussion">#monero gpu mining discussion</div>
+        <div class="status" id="status">Статус: отключено</div>
+      </div>
+      <div>
+        <span class="nickname" id="nickname">...</span>
+        <button id="logoutBtn">Logout</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <div>
+        <div class="messages" id="messages"></div>
+        <form class="input-row" id="messageForm">
+          <input type="text" id="messageInput" placeholder="Сообщение" autocomplete="off" />
+          <button type="submit">Send</button>
+        </form>
+      </div>
+      <div>
+        <div>Участники</div>
+        <div class="participants" id="participants"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+  <script>
+    (function () {
+      const statusEl = document.getElementById('status');
+      const messagesEl = document.getElementById('messages');
+      const participantsEl = document.getElementById('participants');
+      const messageForm = document.getElementById('messageForm');
+      const messageInput = document.getElementById('messageInput');
+      const nicknameEl = document.getElementById('nickname');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      const tokenStore = {
+        accessToken: localStorage.getItem('access_token') || '',
+        refreshToken: localStorage.getItem('refresh_token') || ''
+      };
+
+      function decodeJwt(token) {
+        try {
+          const payload = token.split('.')[1];
+          const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+          return JSON.parse(decodeURIComponent(escape(json)));
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function resolveNickname(token) {
+        const payload = decodeJwt(token) || {};
+        return payload.preferred_username || payload.name || payload.sub || 'user';
+      }
+
+      function setStatus(text) {
+        statusEl.textContent = `Статус: ${text}`;
+        const t = String(text).toLowerCase();
+        statusEl.dataset.state =
+          t.includes('подключено') ? 'ok' :
+          (t.includes('ошибка') || t.includes('нет соединения') || t.includes('нужно перелогиниться')) ? 'bad' :
+          '';
+      }
+
+
+      function escapeHtml(str) {
+        return String(str)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#039;');
+      }
+
+      function isNearBottom(el, threshold = 40) {
+        return el.scrollTop + el.clientHeight >= el.scrollHeight - threshold;
+      }
+      
+      function scrollToBottom() {
+        requestAnimationFrame(() => {
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+        });
+      }
+
+
+     function renderMessage({ author, content, timestamp }) {
+      const shouldStick = isNearBottom(messagesEl);
+    
+      const item = document.createElement('div');
+    
+      const isMe = String(author) === String(nicknameEl.textContent || nickname);
+      item.className = `message ${isMe ? 'me' : 'other'}`;
+    
+      const time = new Date(timestamp).toLocaleTimeString();
+    
+      item.innerHTML = `
+        <div>
+          <span class="author">${escapeHtml(author)}:</span>
+          <span class="content">${escapeHtml(content)}</span>
+        </div>
+        <div class="meta">${escapeHtml(time)}</div>
+      `;
+    
+      messagesEl.appendChild(item);
+    
+      if (shouldStick) {
+        scrollToBottom(); // внутри requestAnimationFrame
+      }
+    }
+
+
+      function renderParticipants(list) {
+        participantsEl.innerHTML = '';
+        list.forEach((name) => {
+          const item = document.createElement('div');
+          item.textContent = name;
+          participantsEl.appendChild(item);
+        });
+      }
+
+      const ChatSocketService = (function () {
+        const maxReconnectAttempts = 5;
+        const baseDelay = 1000;
+        let reconnectAttempts = 0;
+        let stompClient = null;
+        let sock = null;
+        let connecting = false;
+        let manualClose = false;
+
+        function connect() {
+          if (connecting || manualClose) {
+            return;
+          }
+          connecting = true;
+          setStatus('подключение...');
+          sock = new SockJS('/ws');
+          stompClient = Stomp.over(sock);
+          stompClient.debug = null;
+
+          const headers = {
+            Authorization: `Bearer ${tokenStore.accessToken}`
+          };
+
+          sock.onclose = (event) => {
+            if (manualClose) {
+              return;
+            }
+            if (event && event.code === 1008) {
+              handleAuthError();
+              return;
+            }
+            scheduleReconnect();
+          };
+
+          stompClient.connect(
+            headers,
+            () => {
+              connecting = false;
+              reconnectAttempts = 0;
+              setStatus('подключено');
+              stompClient.subscribe('/topic/chat', (message) => {
+                const body = JSON.parse(message.body);
+                renderMessage(body);
+              });
+              stompClient.subscribe('/topic/participants', (message) => {
+                const list = JSON.parse(message.body);
+                renderParticipants(list);
+              });
+            },
+            (errorFrame) => {
+              connecting = false;
+              const errorMessage = errorFrame && errorFrame.headers && errorFrame.headers.message;
+              if (errorMessage && errorMessage.toLowerCase().includes('unauthorized')) {
+                handleAuthError();
+                return;
+              }
+              scheduleReconnect();
+            }
+          );
+        }
+
+        function scheduleReconnect() {
+          if (reconnectAttempts >= maxReconnectAttempts) {
+            setStatus('ошибка подключения');
+            return;
+          }
+          const delay = baseDelay * Math.pow(2, reconnectAttempts);
+          reconnectAttempts += 1;
+          setStatus(`переподключение через ${delay / 1000}с`);
+          setTimeout(connect, delay);
+        }
+
+        function disconnect() {
+          manualClose = true;
+          if (stompClient) {
+            stompClient.disconnect(() => {
+              setStatus('отключено');
+            });
+          }
+        }
+
+        function sendMessage(content, author) {
+          if (!stompClient || !stompClient.connected) {
+            setStatus('нет соединения');
+            return;
+          }
+          const payload = {
+            author,
+            content,
+            timestamp: new Date().toISOString()
+          };
+          try {
+            stompClient.send('/app/chat.send', {}, JSON.stringify(payload));
+          } catch (error) {
+            handleAuthError();
+          }
+        }
+
+        function handleAuthError() {
+          setStatus('обновление токена');
+          refreshToken()
+            .then((newToken) => {
+              tokenStore.accessToken = newToken;
+              localStorage.setItem('access_token', newToken);
+              manualClose = false;
+              connect();
+            })
+            .catch(() => {
+              setStatus('нужно перелогиниться');
+            });
+        }
+
+        function refreshToken() {
+          return fetch('/auth/refresh', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ refreshToken: tokenStore.refreshToken })
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error('Refresh failed');
+              }
+              return response.json();
+            })
+            .then((data) => {
+              return data.accessToken || data.token || '';
+            });
+        }
+
+        function clearTokens() {
+          tokenStore.accessToken = '';
+          tokenStore.refreshToken = '';
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+        }
+
+        return {
+          connect,
+          disconnect,
+          sendMessage,
+          clearTokens
+        };
+      })();
+
+      const nickname = resolveNickname(tokenStore.accessToken);
+      nicknameEl.textContent = nickname;
+
+      messageForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const content = messageInput.value.trim();
+        if (!content) {
+          return;
+        }
+        ChatSocketService.sendMessage(content, nickname);
+        messageInput.value = '';
+      });
+
+      logoutBtn.addEventListener('click', () => {
+        ChatSocketService.disconnect();
+        ChatSocketService.clearTokens();
+        setStatus('отключено');
+      });
+
+      ChatSocketService.connect();
+    })();
+  </script>
+</body>
+</html>
