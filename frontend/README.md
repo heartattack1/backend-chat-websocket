@@ -7,7 +7,7 @@
   - `sockjs-client@1`
   - `stompjs@2.3.3`
 - **Точки входа:**
-  - HTML: `frontend/index.html`
+  - HTML: `src/main/resources/static/index.html`
   - JS: инлайн-скрипт внутри `index.html`
   - CSS: инлайн-стили внутри `index.html`
 
@@ -58,4 +58,4 @@
 
 ## Как открыть локально
 
-Открыть `frontend/index.html` в браузере или отдать через любой static-сервер.
+Открыть `http://localhost:8080` после запуска приложения через Docker Compose.
