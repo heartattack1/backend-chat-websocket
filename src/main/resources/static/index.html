@@ -759,6 +759,15 @@ button{
         });
       }
 
+      function refreshParticipants() {
+        fetch('/api/chat/users')
+          .then((response) => response.json())
+          .then((usersResponse) => renderParticipants(usersResponse && usersResponse.users ? usersResponse.users : []))
+          .catch(() => {
+            setStatus('ошибка загрузки списка пользователей');
+          });
+      }
+
       const ChatSocketService = (function () {
         const maxReconnectAttempts = 5;
         const baseDelay = 1000;
@@ -808,6 +817,7 @@ button{
                 const payload = JSON.parse(message.body);
                 renderParticipants(payload);
               });
+              refreshParticipants();
             },
             () => {
               connecting = false;
@@ -894,20 +904,14 @@ button{
           ChatSocketService.connect(value);
           fetch('/api/chat/history?limit=50')
             .then((response) => response.json())
-            .then((history) => {
-              messagesEl.innerHTML = '';
-              const messages = history && history.messages ? history.messages : [];
-              messages.forEach((message) => renderMessage(message));
-            })
-            .catch(() => {
-              setStatus('ошибка загрузки истории');
-            });
-          fetch('/api/chat/users')
-            .then((response) => response.json())
-            .then((usersResponse) => renderParticipants(usersResponse && usersResponse.users ? usersResponse.users : []))
-            .catch(() => {
-              setStatus('ошибка загрузки списка пользователей');
-            });
+          .then((history) => {
+            messagesEl.innerHTML = '';
+            const messages = history && history.messages ? history.messages : [];
+            messages.forEach((message) => renderMessage(message));
+          })
+          .catch(() => {
+            setStatus('ошибка загрузки истории');
+          });
         });
       }
 
@@ -942,12 +946,6 @@ button{
           })
           .catch(() => {
             setStatus('ошибка загрузки истории');
-          });
-        fetch('/api/chat/users')
-          .then((response) => response.json())
-          .then((usersResponse) => renderParticipants(usersResponse && usersResponse.users ? usersResponse.users : []))
-          .catch(() => {
-            setStatus('ошибка загрузки списка пользователей');
           });
       } else {
         requestNickname();
