@@ -79,6 +79,11 @@
     }
 
     function startAuth(config) {
+      if (!window.YaAuthSuggest || !window.YaAuthSuggest.init) {
+        setStatus('OAuth-кнопка недоступна. Проверьте блокировщики или доступ к yastatic.net.');
+        return;
+      }
+
       window.YaAuthSuggest.init(
         {
           client_id: config.clientId,
@@ -116,6 +121,10 @@
         })
         .catch((error) => {
           console.error(error);
+          if (error && error.code === 'not_available') {
+            setStatus('OAuth-кнопка недоступна. Проверьте блокировщики или доступ к yastatic.net.');
+            return;
+          }
           setStatus('Ошибка авторизации. Проверьте токен или настройки приложения.');
         });
     }
