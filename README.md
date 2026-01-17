@@ -31,7 +31,7 @@ From the project root, execute:
 
 ## Usage
 
-1. Start the stack (see instructions above) and open `http://localhost:8080` in your browser.
+1. Start the stack (see instructions above) and open `http://localhost:8080` in your browser. The UI is served from the Spring Boot static resources.
 2. Enter a nickname on the join screen. The client passes the nickname as a STOMP header.
 3. The UI immediately loads the last N messages from `GET /api/chat/history?limit=50` and renders them chronologically.
 4. Online users are shown in the right panel and are refreshed via `GET /api/chat/users` and `/topic/chat.users` updates.
