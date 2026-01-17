@@ -28,3 +28,19 @@ From the project root, execute:
 ```bash
 ./gradlew test
 ```
+
+## Current state of the project
+
+### Runtime/API surface
+- REST: OpenAPI spec defines a single health endpoint at `GET /api/ping` that returns `{ "message": "pong" }`. The spec is stored in `src/main/resources/openapi.yaml` and the Spring Boot app listens on port `8080`. 
+- WebSocket/STOMP: The server exposes a SockJS-enabled STOMP endpoint at `/ws` with application destinations under `/app` and a simple broker on `/topic` and `/queue`. Clients send messages to `/app/chat.send`, and the server broadcasts to `/topic/chat.messages`.
+
+### Domain and persistence
+- Domain model includes `ChatMessage`, `MessageId`, and `UserId`. There are repositories for chat messages and users, plus a `MessageIdGenerator` implementation based on ULIDs. 
+- Persistence uses Spring Data JPA with PostgreSQL, managed by Liquibase migrations in `src/main/resources/db/changelog`.
+- There are two message flows today:
+  - `PostMessageScenario` persists a `ChatMessage` to the database using the repository and ULID generator.
+  - `PostChatMessageScenario` (used by the WebSocket controller) validates, logs, and broadcasts chat messages but **does not persist** them yet.
+
+### Observability/logging
+- Posted chat messages are logged with author, id, and length (sanitized to single-line output) by `PostChatMessageScenario`.
