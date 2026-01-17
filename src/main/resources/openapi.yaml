@@ -18,8 +18,60 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PingResponse'
+  /api/chat/history:
+    get:
+      tags:
+        - chat
+      summary: Get chat history
+      operationId: getChatHistory
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        '200':
+          description: Last chat messages ordered by creation time ascending
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatHistoryResponse'
 components:
   schemas:
+    ChatHistoryResponse:
+      type: object
+      required:
+        - messages
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessageResponse'
+    ChatMessageResponse:
+      type: object
+      required:
+        - id
+        - authorId
+        - text
+        - createdAt
+      properties:
+        id:
+          type: string
+          example: 01J9R4ZPJ9Y4RWKBR7GZQ3FP2F
+        authorId:
+          type: string
+          format: uuid
+          example: 84ea8dfa-5f6c-4d55-9905-6558d838756e
+        text:
+          type: string
+          example: Hello!
+        createdAt:
+          type: string
+          format: date-time
     PingResponse:
       type: object
       required:
