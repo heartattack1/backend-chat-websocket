@@ -1,8 +1,8 @@
 package com.example.backendchatwebsocket.application.presence;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.messaging.MessageHeaders;
@@ -37,7 +37,7 @@ public class UsernameResolver {
         }
 
         String principalName = Optional.ofNullable(accessor.getUser())
-                .map(Object::toString)
+                .map(Principal::getName)
                 .map(String::trim)
                 .filter(name -> !name.isEmpty())
                 .orElse(null);
