@@ -2,6 +2,7 @@ package com.example.backendchatwebsocket.application.scenario;
 
 import com.example.backendchatwebsocket.application.command.PostMessageCommand;
 import com.example.backendchatwebsocket.application.event.ChatMessageEvent;
+import com.example.backendchatwebsocket.application.validation.MessageTextValidator;
 import com.example.backendchatwebsocket.domain.model.ChatMessage;
 import com.example.backendchatwebsocket.domain.model.User;
 import com.example.backendchatwebsocket.domain.model.UserId;
@@ -23,17 +24,16 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class PostChatMessageScenario
         implements Scenario<Void, ChatMessageEvent, PostChatMessageCommand> {
-    private static final int MAX_LENGTH = 1000;
-
     private final PostMessageScenario postMessageScenario;
     private final UserRepository userRepository;
     private final Clock clock;
+    private final MessageTextValidator messageTextValidator;
 
     @Override
     public ChatMessageEvent execute(PostChatMessageCommand postChatMessageCommand) {
         String normalizedAuthor = normalizeAuthor(postChatMessageCommand.author());
         String normalizedText = normalizeText(postChatMessageCommand.text());
-        validateText(normalizedText);
+        messageTextValidator.validate(normalizedText);
 
         UserId authorUserId = toAuthorUserId(normalizedAuthor);
         ensureUserExists(authorUserId, normalizedAuthor);
@@ -57,16 +57,6 @@ public class PostChatMessageScenario
             return null;
         }
         return text.trim();
-    }
-
-    private void validateText(String text) {
-        if (text == null || text.isBlank()) {
-            throw new IllegalArgumentException("Message text must not be blank");
-        }
-        if (text.length() > MAX_LENGTH) {
-            throw new IllegalArgumentException(
-                    "Message text exceeds maximum length of " + MAX_LENGTH);
-        }
     }
 
     private void logMessage(ChatMessageEvent event) {
