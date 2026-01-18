@@ -29,32 +29,35 @@ public class AuthController {
 
     private final YandexOAuthProperties yandexOAuthProperties;
     private final RestClient restClient;
-    private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
-    private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
+    private final SecurityContextRepository securityContextRepository =
+            new HttpSessionSecurityContextRepository();
+    private final SecurityContextHolderStrategy securityContextHolderStrategy =
+            SecurityContextHolder.getContextHolderStrategy();
 
-    public AuthController(YandexOAuthProperties yandexOAuthProperties, RestClient.Builder restClientBuilder) {
+    public AuthController(
+            YandexOAuthProperties yandexOAuthProperties, RestClient.Builder restClientBuilder) {
         this.yandexOAuthProperties = yandexOAuthProperties;
         this.restClient = restClientBuilder.build();
     }
 
     @GetMapping("/api/auth/config")
     public ResponseEntity<AuthConfigResponse> getAuthConfig() {
-        if (yandexOAuthProperties.getClientId() == null || yandexOAuthProperties.getClientId().isBlank()) {
+        if (yandexOAuthProperties.getClientId() == null
+                || yandexOAuthProperties.getClientId().isBlank()) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
         }
-        return ResponseEntity.ok(new AuthConfigResponse(
-                yandexOAuthProperties.getClientId(),
-                yandexOAuthProperties.getRedirectUri(),
-                yandexOAuthProperties.getTokenPageOrigin()
-        ));
+        return ResponseEntity.ok(
+                new AuthConfigResponse(
+                        yandexOAuthProperties.getClientId(),
+                        yandexOAuthProperties.getRedirectUri(),
+                        yandexOAuthProperties.getTokenPageOrigin()));
     }
 
     @PostMapping(path = "/api/auth/yandex", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CurrentUserResponse> loginWithYandex(
             @RequestBody TokenRequest tokenRequest,
             HttpServletRequest request,
-            HttpServletResponse response
-    ) {
+            HttpServletResponse response) {
         String accessToken = Optional.ofNullable(tokenRequest)
                 .map(TokenRequest::accessToken)
                 .map(String::trim)
@@ -71,11 +74,9 @@ public class AuthController {
         }
         String username = resolveUsername(userInfo);
 
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                username,
-                "N/A",
-                List.of(new SimpleGrantedAuthority("ROLE_USER"))
-        );
+        Authentication authentication =
+                new UsernamePasswordAuthenticationToken(
+                        username, "N/A", List.of(new SimpleGrantedAuthority("ROLE_USER")));
 
         var context = securityContextHolderStrategy.createEmptyContext();
         context.setAuthentication(authentication);
@@ -95,7 +96,8 @@ public class AuthController {
     }
 
     private YandexUserInfo fetchUserInfo(String accessToken) {
-        return restClient.get()
+        return restClient
+                .get()
                 .uri(yandexOAuthProperties.getUserInfoUri())
                 .header("Authorization", OAUTH_HEADER_PREFIX + accessToken)
                 .retrieve()
