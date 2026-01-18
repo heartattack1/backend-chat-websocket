@@ -64,7 +64,8 @@ public class PostChatMessageScenario
             throw new IllegalArgumentException("Message text must not be blank");
         }
         if (text.length() > MAX_LENGTH) {
-            throw new IllegalArgumentException("Message text exceeds maximum length of " + MAX_LENGTH);
+            throw new IllegalArgumentException(
+                    "Message text exceeds maximum length of " + MAX_LENGTH);
         }
     }
 

@@ -26,7 +26,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 class ChatMessageRepositoryImplTest {
 
     @Container
-    private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
+    private static final PostgreSQLContainer<?> POSTGRES =
+            new PostgreSQLContainer<>("postgres:16-alpine");
 
     @DynamicPropertySource
     static void registerProperties(DynamicPropertyRegistry registry) {
