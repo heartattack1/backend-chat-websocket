@@ -17,5 +17,4 @@ public record ChatMessage(MessageId id, UserId authorUserId, String text, Instan
     public static ChatMessage post(MessageId id, UserId authorUserId, String text, Instant createdAt) {
         return new ChatMessage(id, authorUserId, text, createdAt);
     }
-
 }

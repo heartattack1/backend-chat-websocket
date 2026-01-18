@@ -6,21 +6,23 @@ import com.example.backendchatwebsocket.domain.model.ChatMessage;
 import com.example.backendchatwebsocket.domain.model.User;
 import com.example.backendchatwebsocket.domain.model.UserId;
 import com.example.backendchatwebsocket.domain.repository.UserRepository;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.OffsetDateTime;
-import java.nio.charset.StandardCharsets;
 import java.util.UUID;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+/**
+ * Публикует сообщение в чате от имени автора, валидирует текст и обеспечивает наличие автора
+ * в репозитории пользователей.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class PostChatMessageScenario implements Scenario<Void, ChatMessageEvent, PostChatMessageCommand> {
+public class PostChatMessageScenario
+        implements Scenario<Void, ChatMessageEvent, PostChatMessageCommand> {
     private static final int MAX_LENGTH = 1000;
 
     private final PostMessageScenario postMessageScenario;
@@ -35,7 +37,8 @@ public class PostChatMessageScenario implements Scenario<Void, ChatMessageEvent,
 
         UserId authorUserId = toAuthorUserId(normalizedAuthor);
         ensureUserExists(authorUserId, normalizedAuthor);
-        ChatMessage savedMessage = postMessageScenario.execute(new PostMessageCommand(authorUserId, normalizedText));
+        ChatMessage savedMessage =
+                postMessageScenario.execute(new PostMessageCommand(authorUserId, normalizedText));
 
         ChatMessageEvent event = ChatMessageEvent.from(savedMessage, normalizedAuthor);
         logMessage(event);
@@ -72,8 +75,7 @@ public class PostChatMessageScenario implements Scenario<Void, ChatMessageEvent,
                 event.getAuthor(),
                 event.getId(),
                 event.getText().length(),
-                sanitizedText
-        );
+                sanitizedText);
     }
 
     private UserId toAuthorUserId(String author) {
@@ -86,19 +88,17 @@ public class PostChatMessageScenario implements Scenario<Void, ChatMessageEvent,
             return;
         }
         OffsetDateTime now = OffsetDateTime.now(clock);
-        User user = new User(
-                authorUserId,
-                "chat",
-                author,
-                author,
-                null,
-                null,
-                true,
-                now,
-                now
-        );
+        User user =
+                new User(
+                        authorUserId,
+                        "chat",
+                        author,
+                        author,
+                        null,
+                        null,
+                        true,
+                        now,
+                        now);
         userRepository.save(user);
     }
-
-
 }

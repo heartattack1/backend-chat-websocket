@@ -15,9 +15,10 @@ public class PostMessageScenario implements Scenario<Void, ChatMessage, PostMess
     private final MessageIdGenerator messageIdGenerator;
     private final Clock clock;
 
-    public PostMessageScenario(ChatMessageRepository chatMessageRepository,
-                               MessageIdGenerator messageIdGenerator,
-                               Clock clock) {
+    public PostMessageScenario(
+            ChatMessageRepository chatMessageRepository,
+            MessageIdGenerator messageIdGenerator,
+            Clock clock) {
         this.chatMessageRepository = chatMessageRepository;
         this.messageIdGenerator = messageIdGenerator;
         this.clock = clock;
