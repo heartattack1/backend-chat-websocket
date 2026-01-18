@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 import com.example.backendchatwebsocket.application.command.PostMessageCommand;
 import com.example.backendchatwebsocket.domain.model.ChatMessage;
+import com.example.backendchatwebsocket.domain.model.ChatMessageWithAuthor;
 import com.example.backendchatwebsocket.domain.model.MessageId;
 import com.example.backendchatwebsocket.domain.model.UserId;
 import com.example.backendchatwebsocket.domain.repository.ChatMessageRepository;
@@ -46,6 +47,11 @@ class PostMessageScenarioTest {
         @Override
         public List<ChatMessage> findLastN(int count) {
             return saved == null ? List.of() : List.of(saved);
+        }
+
+        @Override
+        public List<ChatMessageWithAuthor> findLastNWithAuthor(int count) {
+            return List.of();
         }
 
         private ChatMessage lastSaved() {

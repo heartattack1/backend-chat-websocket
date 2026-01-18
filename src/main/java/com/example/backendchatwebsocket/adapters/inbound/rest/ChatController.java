@@ -8,19 +8,15 @@ import com.example.backendchatwebsocket.application.presence.OnlineUserRegistry;
 import com.example.backendchatwebsocket.application.scenario.get_chat_history.GetChatHistoryScenario;
 import com.example.backendchatwebsocket.application.scenario.get_chat_history.GetChatHistoryScenarioRequest;
 import com.example.backendchatwebsocket.domain.model.ChatMessageWithAuthor;
-
+import com.example.lib.Result;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-
-import com.example.lib.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@Service
 @RequiredArgsConstructor
 public class ChatController implements ChatApi {
     private final GetChatHistoryScenario getChatHistoryScenario;
@@ -28,7 +24,8 @@ public class ChatController implements ChatApi {
 
     @Override
     public ResponseEntity<ChatHistoryResponse> getChatHistory(Integer limit) {
-        Result<List<ChatMessageWithAuthor>> result = getChatHistoryScenario.execute(new GetChatHistoryScenarioRequest(limit));
+        Result<List<ChatMessageWithAuthor>> result =
+                getChatHistoryScenario.execute(new GetChatHistoryScenarioRequest(limit));
         if (result.isSuccess()) {
             List<ChatMessageWithAuthor> history = result.getOrNull();
             ChatHistoryResponse response = new ChatHistoryResponse();

@@ -5,11 +5,8 @@ import com.example.backendchatwebsocket.domain.model.ChatMessageWithAuthor;
 import com.example.backendchatwebsocket.domain.model.MessageId;
 import com.example.backendchatwebsocket.domain.model.UserId;
 import com.example.backendchatwebsocket.domain.repository.ChatMessageRepository;
-
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,41 +15,45 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 public class ChatMessageRepositoryImpl implements ChatMessageRepository {
+    private static final Comparator<ChatMessage> MESSAGE_ORDER =
+            Comparator.comparing(ChatMessage::createdAt)
+                    .thenComparing(message -> message.id().value());
+    private static final Comparator<ChatMessageWithAuthor> MESSAGE_WITH_AUTHOR_ORDER =
+            Comparator.comparing(ChatMessageWithAuthor::createdAt)
+                    .thenComparing(message -> message.id().value());
 
     private final ChatMessageJpaRepository repository;
 
     @Override
     public void save(ChatMessage message) {
-        repository.save(this.toEntity(message));
+        repository.save(toEntity(message));
     }
 
     @Override
     public List<ChatMessage> findLastN(int count) {
         Pageable pageable = PageRequest.of(0, count);
         List<ChatMessageEntity> entities = repository.findAllByOrderByCreatedAtDescIdDesc(pageable);
-        return entities.stream()
-                .map(this::toDomain)
-                .sorted(Comparator.comparing(ChatMessage::createdAt).thenComparing(message -> message.id().value()))
-                .collect(Collectors.toList());
+        return entities.stream().map(this::toDomain).sorted(MESSAGE_ORDER).toList();
     }
 
     @Override
     public List<ChatMessageWithAuthor> findLastNWithAuthor(int count) {
         Pageable pageable = PageRequest.of(0, count);
-        List<ChatMessageWithAuthorProjection> entities = repository.findAllWithAuthorByOrderByCreatedAtDescIdDesc(pageable);
-        return entities.stream()
-                .map(entity -> new ChatMessageWithAuthor(
-                        new MessageId(entity.getId()),
-                        new UserId(entity.getAuthorUserId()),
-                        entity.getAuthorName(),
-                        entity.getText(),
-                        entity.getCreatedAt()))
-                .sorted(Comparator.comparing(ChatMessageWithAuthor::createdAt)
-                        .thenComparing(message -> message.id().value()))
-                .collect(Collectors.toList());
+        List<ChatMessageWithAuthorProjection> entities =
+                repository.findAllWithAuthorByOrderByCreatedAtDescIdDesc(pageable);
+        return entities.stream().map(this::toDomain).sorted(MESSAGE_WITH_AUTHOR_ORDER).toList();
     }
 
-    ChatMessageEntity toEntity(ChatMessage message) {
+    private ChatMessageWithAuthor toDomain(ChatMessageWithAuthorProjection entity) {
+        return new ChatMessageWithAuthor(
+                new MessageId(entity.getId()),
+                new UserId(entity.getAuthorUserId()),
+                entity.getAuthorName(),
+                entity.getText(),
+                entity.getCreatedAt());
+    }
+
+    private ChatMessageEntity toEntity(ChatMessage message) {
         return new ChatMessageEntity(
                 message.id().value(),
                 message.authorUserId().value(),
@@ -60,7 +61,7 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
                 message.createdAt());
     }
 
-    ChatMessage toDomain(ChatMessageEntity entity) {
+    private ChatMessage toDomain(ChatMessageEntity entity) {
         return ChatMessage.post(
                 new MessageId(entity.getId()),
                 new UserId(entity.getAuthorUserId()),

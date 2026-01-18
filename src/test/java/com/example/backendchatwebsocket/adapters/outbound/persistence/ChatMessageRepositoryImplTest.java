@@ -26,7 +26,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 class ChatMessageRepositoryImplTest {
 
     @Container
-    private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
+    private static final PostgreSQLContainer<?> POSTGRES =
+            new PostgreSQLContainer<>("postgres:16-alpine");
 
     @DynamicPropertySource
     static void registerProperties(DynamicPropertyRegistry registry) {
@@ -45,11 +46,27 @@ class ChatMessageRepositoryImplTest {
     void findsLastMessagesInChronologicalOrder() {
         UserEntity user = buildUser();
         userJpaRepository.save(user);
-        ChatMessageRepositoryImpl adapter = new ChatMessageRepositoryImpl(chatMessageJpaRepository);
+        ChatMessageRepositoryImpl adapter =
+                new ChatMessageRepositoryImpl(chatMessageJpaRepository);
 
-        ChatMessage first = message("01J2M5Z8V6H4C4B9QF6XH1T2Z1", user.getId(), "first", Instant.parse("2025-01-01T00:00:00Z"));
-        ChatMessage second = message("01J2M5Z8V6H4C4B9QF6XH1T2Z2", user.getId(), "second", Instant.parse("2025-01-01T00:01:00Z"));
-        ChatMessage third = message("01J2M5Z8V6H4C4B9QF6XH1T2Z3", user.getId(), "third", Instant.parse("2025-01-01T00:02:00Z"));
+        ChatMessage first =
+                message(
+                        "01J2M5Z8V6H4C4B9QF6XH1T2Z1",
+                        user.getId(),
+                        "first",
+                        Instant.parse("2025-01-01T00:00:00Z"));
+        ChatMessage second =
+                message(
+                        "01J2M5Z8V6H4C4B9QF6XH1T2Z2",
+                        user.getId(),
+                        "second",
+                        Instant.parse("2025-01-01T00:01:00Z"));
+        ChatMessage third =
+                message(
+                        "01J2M5Z8V6H4C4B9QF6XH1T2Z3",
+                        user.getId(),
+                        "third",
+                        Instant.parse("2025-01-01T00:02:00Z"));
 
         adapter.save(first);
         adapter.save(second);
@@ -57,8 +74,7 @@ class ChatMessageRepositoryImplTest {
 
         List<ChatMessage> lastTwo = adapter.findLastN(2);
 
-        assertThat(lastTwo).extracting(ChatMessage::id)
-                .containsExactly(second.id(), third.id());
+        assertThat(lastTwo).extracting(ChatMessage::id).containsExactly(second.id(), third.id());
     }
 
     private static ChatMessage message(String id, UUID userId, String text, Instant createdAt) {
