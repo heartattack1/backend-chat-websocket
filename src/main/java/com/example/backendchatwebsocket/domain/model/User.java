@@ -1,19 +1,19 @@
 package com.example.backendchatwebsocket.domain.model;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.Objects;
 
 public record User(UserId id, String provider, String providerUserId, String displayName, String profileUrl,
-                   OffsetDateTime lastLoginAt, boolean isActive, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+                   Instant lastLoginAt, boolean isActive, Instant createdAt, Instant updatedAt) {
     public User(UserId id,
                 String provider,
                 String providerUserId,
                 String displayName,
                 String profileUrl,
-                OffsetDateTime lastLoginAt,
+                Instant lastLoginAt,
                 boolean isActive,
-                OffsetDateTime createdAt,
-                OffsetDateTime updatedAt) {
+                Instant createdAt,
+                Instant updatedAt) {
         this.id = Objects.requireNonNull(id, "User id is required");
         this.provider = Objects.requireNonNull(provider, "Provider is required");
         this.providerUserId = Objects.requireNonNull(providerUserId, "Provider user id is required");

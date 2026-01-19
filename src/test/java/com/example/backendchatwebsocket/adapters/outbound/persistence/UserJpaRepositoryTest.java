@@ -3,8 +3,7 @@ package com.example.backendchatwebsocket.adapters.outbound.persistence;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -63,14 +62,14 @@ class UserJpaRepositoryTest {
     }
 
     private UserEntity buildUser(String provider, String providerUserId) {
-        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        Instant now = Instant.parse("2025-01-01T00:00:00Z");
         return new UserEntity(
                 UUID.randomUUID(),
                 provider,
                 providerUserId,
                 "Ivanov Ivan",
                 "https://example.com/vk",
-                now.minusDays(1),
+                now.minusSeconds(86400),
                 true,
                 now,
                 now);

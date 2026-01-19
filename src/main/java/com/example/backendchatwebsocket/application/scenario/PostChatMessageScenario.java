@@ -9,7 +9,7 @@ import com.example.backendchatwebsocket.domain.model.UserId;
 import com.example.backendchatwebsocket.domain.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,7 +78,7 @@ public class PostChatMessageScenario
         if (userRepository.findById(authorUserId).isPresent()) {
             return;
         }
-        OffsetDateTime now = OffsetDateTime.now(clock);
+        Instant now = Instant.now(clock);
         User user =
                 new User(
                         authorUserId,

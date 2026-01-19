@@ -18,6 +18,7 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
     private static final Comparator<ChatMessage> MESSAGE_ORDER =
             Comparator.comparing(ChatMessage::createdAt)
                     .thenComparing(message -> message.id().value());
+
     private static final Comparator<ChatMessageWithAuthor> MESSAGE_WITH_AUTHOR_ORDER =
             Comparator.comparing(ChatMessageWithAuthor::createdAt)
                     .thenComparing(message -> message.id().value());

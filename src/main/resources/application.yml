@@ -1,4 +1,8 @@
 spring:
+  jackson:
+    time-zone: ${app.timezone:UTC}
+    serialization:
+      write-dates-as-timestamps: false
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/backend_chat}
     username: ${DB_USERNAME:postgres}
@@ -24,6 +28,9 @@ spring:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.xml
 
+app:
+  timezone: ${APP_TIMEZONE:UTC}
+
 chat:
   presence:
     username-header-names:
@@ -35,7 +42,7 @@ chat:
       - http://localhost:8080
   oauth:
     yandex:
-      client-id: ${YANDEX_CLIENT_ID:}
+      client-id: ${YANDEX_CLIENT_ID:c1b2f56139704a8db5ff875615085e9e}
       redirect-uri: ${YANDEX_REDIRECT_URI:http://localhost:8080/oauth/token}
       token-page-origin: ${YANDEX_TOKEN_PAGE_ORIGIN:http://localhost:8080}
       user-info-uri: ${YANDEX_USER_INFO_URI:https://login.yandex.ru/info?format=json}

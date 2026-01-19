@@ -4,15 +4,14 @@ import com.example.backendchatwebsocket.domain.model.User;
 import com.example.backendchatwebsocket.domain.model.UserId;
 import com.example.backendchatwebsocket.domain.repository.UserRepository;
 import java.util.Optional;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@RequiredArgsConstructor
 public class JpaUserRepositoryAdapter implements UserRepository {
     private final UserJpaRepository userJpaRepository;
-
-    public JpaUserRepositoryAdapter(UserJpaRepository userJpaRepository) {
-        this.userJpaRepository = userJpaRepository;
-    }
 
     @Override
     public Optional<User> findById(UserId id) {
@@ -27,12 +26,12 @@ public class JpaUserRepositoryAdapter implements UserRepository {
     private User toDomain(UserEntity entity) {
         return new User(
                 new UserId(entity.getId()),
-                entity.getProvider(),
-                entity.getProviderUserId(),
+                entity.getAuthProvider(),
+                entity.getAuthProviderUserId(),
                 entity.getDisplayName(),
                 entity.getProfileUrl(),
                 entity.getLastLoginAt(),
-                entity.isActive(),
+                entity.getIsActive(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

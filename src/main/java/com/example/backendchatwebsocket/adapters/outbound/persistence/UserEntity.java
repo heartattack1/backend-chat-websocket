@@ -4,9 +4,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.OffsetDateTime;
+import lombok.Getter;
+
+import java.time.Instant;
 import java.util.UUID;
 
+@Getter
 @Entity
 @Table(name = "users")
 public class UserEntity {
@@ -14,11 +17,11 @@ public class UserEntity {
     @Id
     private UUID id;
 
-    @Column(nullable = false, length = 32)
-    private String provider;
+    @Column(name = "auth_provider", nullable = false, length = 32)
+    private String authProvider;
 
-    @Column(name = "provider_user_id", nullable = false, length = 128)
-    private String providerUserId;
+    @Column(name = "auth_provider_user_id", nullable = false, length = 128)
+    private String authProviderUserId;
 
     @Column(name = "display_name", nullable = false, length = 64)
     private String displayName;
@@ -27,32 +30,32 @@ public class UserEntity {
     private String profileUrl;
 
     @Column(name = "last_login_at")
-    private OffsetDateTime lastLoginAt;
+    private Instant lastLoginAt;
 
     @Column(name = "is_active", nullable = false)
-    private boolean isActive;
+    private Boolean isActive;
 
     @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private OffsetDateTime updatedAt;
+    private Instant updatedAt;
 
     protected UserEntity() {
     }
 
     public UserEntity(UUID id,
                       String provider,
-                      String providerUserId,
+                      String authProviderUserId,
                       String displayName,
                       String profileUrl,
-                      OffsetDateTime lastLoginAt,
-                      boolean isActive,
-                      OffsetDateTime createdAt,
-                      OffsetDateTime updatedAt) {
+                      Instant lastLoginAt,
+                      Boolean isActive,
+                      Instant createdAt,
+                      Instant updatedAt) {
         this.id = id;
-        this.provider = provider;
-        this.providerUserId = providerUserId;
+        this.authProvider = provider;
+        this.authProviderUserId = authProviderUserId;
         this.displayName = displayName;
         this.profileUrl = profileUrl;
         this.lastLoginAt = lastLoginAt;
@@ -61,39 +64,4 @@ public class UserEntity {
         this.updatedAt = updatedAt;
     }
 
-    public UUID getId() {
-        return id;
-    }
-
-    public String getProvider() {
-        return provider;
-    }
-
-    public String getProviderUserId() {
-        return providerUserId;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public String getProfileUrl() {
-        return profileUrl;
-    }
-
-    public OffsetDateTime getLastLoginAt() {
-        return lastLoginAt;
-    }
-
-    public boolean isActive() {
-        return isActive;
-    }
-
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
-    }
 }

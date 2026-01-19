@@ -6,8 +6,6 @@ import com.example.backendchatwebsocket.domain.model.ChatMessage;
 import com.example.backendchatwebsocket.domain.model.MessageId;
 import com.example.backendchatwebsocket.domain.model.UserId;
 import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -82,14 +80,14 @@ class ChatMessageRepositoryImplTest {
     }
 
     private static UserEntity buildUser() {
-        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        Instant now = Instant.parse("2025-01-01T00:00:00Z");
         return new UserEntity(
                 UUID.randomUUID(),
                 "vk",
                 "vk-42",
                 "Ivanov Ivan",
                 "https://example.com/vk",
-                now.minusDays(1),
+                now.minusSeconds(86400),
                 true,
                 now,
                 now);
