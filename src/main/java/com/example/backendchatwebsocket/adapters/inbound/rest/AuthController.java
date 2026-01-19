@@ -4,6 +4,7 @@ import com.example.backendchatwebsocket.application.auth.YandexOAuthProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -30,15 +31,19 @@ public class AuthController {
 
     private final YandexOAuthProperties yandexOAuthProperties;
     private final RestClient restClient;
+    private final Clock clock;
     private final SecurityContextRepository securityContextRepository =
             new HttpSessionSecurityContextRepository();
     private final SecurityContextHolderStrategy securityContextHolderStrategy =
             SecurityContextHolder.getContextHolderStrategy();
 
     public AuthController(
-            YandexOAuthProperties yandexOAuthProperties, RestClient.Builder restClientBuilder) {
+            YandexOAuthProperties yandexOAuthProperties,
+            RestClient.Builder restClientBuilder,
+            Clock clock) {
         this.yandexOAuthProperties = yandexOAuthProperties;
         this.restClient = restClientBuilder.build();
+        this.clock = clock;
     }
 
     @GetMapping("/api/auth/config")
@@ -84,7 +89,7 @@ public class AuthController {
         securityContextHolderStrategy.setContext(context);
         securityContextRepository.saveContext(context, request, response);
 
-        return ResponseEntity.ok(new CurrentUserResponse(username, Instant.now().toString()));
+        return ResponseEntity.ok(new CurrentUserResponse(username, Instant.now(clock).toString()));
     }
 
     @GetMapping("/api/auth/me")
@@ -95,7 +100,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         String username = authentication.getName();
-        return ResponseEntity.ok(new CurrentUserResponse(username, Instant.now().toString()));
+        return ResponseEntity.ok(new CurrentUserResponse(username, Instant.now(clock).toString()));
     }
 
     private YandexUserInfo fetchUserInfo(String accessToken) {

@@ -1,4 +1,8 @@
 spring:
+  jackson:
+    time-zone: ${app.timezone:UTC}
+    serialization:
+      write-dates-as-timestamps: false
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/backend_chat}
     username: ${DB_USERNAME:postgres}
@@ -23,6 +27,9 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.xml
+
+app:
+  timezone: ${APP_TIMEZONE:UTC}
 
 chat:
   presence:

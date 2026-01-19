@@ -4,7 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -27,16 +27,16 @@ public class UserEntity {
     private String profileUrl;
 
     @Column(name = "last_login_at")
-    private OffsetDateTime lastLoginAt;
+    private Instant lastLoginAt;
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
 
     @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private OffsetDateTime updatedAt;
+    private Instant updatedAt;
 
     protected UserEntity() {
     }
@@ -46,10 +46,10 @@ public class UserEntity {
                       String providerUserId,
                       String displayName,
                       String profileUrl,
-                      OffsetDateTime lastLoginAt,
+                      Instant lastLoginAt,
                       boolean isActive,
-                      OffsetDateTime createdAt,
-                      OffsetDateTime updatedAt) {
+                      Instant createdAt,
+                      Instant updatedAt) {
         this.id = id;
         this.provider = provider;
         this.providerUserId = providerUserId;
@@ -81,7 +81,7 @@ public class UserEntity {
         return profileUrl;
     }
 
-    public OffsetDateTime getLastLoginAt() {
+    public Instant getLastLoginAt() {
         return lastLoginAt;
     }
 
@@ -89,11 +89,11 @@ public class UserEntity {
         return isActive;
     }
 
-    public OffsetDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public OffsetDateTime getUpdatedAt() {
+    public Instant getUpdatedAt() {
         return updatedAt;
     }
 }

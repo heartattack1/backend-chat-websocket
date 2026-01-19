@@ -23,7 +23,7 @@
             <column name="text" type="TEXT">
                 <constraints nullable="false"/>
             </column>
-            <column name="created_at" type="TIMESTAMP">
+            <column name="created_at" type="TIMESTAMPTZ">
                 <constraints nullable="false"/>
             </column>
         </createTable>
