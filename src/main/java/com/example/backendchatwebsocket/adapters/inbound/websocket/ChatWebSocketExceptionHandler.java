@@ -20,7 +20,6 @@ public class ChatWebSocketExceptionHandler {
     @SendToUser("/queue/errors")
     public ErrorEvent handleValidationError(IllegalArgumentException ex) {
         log.warn("chat_message_validation_failed reason={}", ex.getMessage());
-        // TODO: attach error metadata (request id, session id) and publish metrics.
         return new ErrorEvent(ex.getMessage(), "VALIDATION_ERROR", Instant.now(clock).toString());
     }
 
@@ -28,7 +27,6 @@ public class ChatWebSocketExceptionHandler {
     @SendToUser("/queue/errors")
     public ErrorEvent handleUnexpectedError(Exception ex) {
         log.error("chat_message_unexpected_error", ex);
-        // TODO: map specific exceptions to error codes and send error frames.
         return new ErrorEvent("Unexpected error", "UNEXPECTED_ERROR", Instant.now(clock).toString());
     }
 }

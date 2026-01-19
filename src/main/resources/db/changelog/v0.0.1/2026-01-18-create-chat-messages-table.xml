@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd">
+
+    <changeSet id="create_chat_messages_table" author="rsadretdinov">
+        <createTable tableName="chat_messages">
+            <column name="id" type="VARCHAR(26)">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_chat_messages"
+                             uniqueConstraintName="ch__chat_messages_id__uq"
+                             notNullConstraintName="ch__chat_messages_id__nn"/>
+            </column>
+            <column name="author_user_id" type="UUID">
+                <constraints nullable="false" notNullConstraintName="ch__chat_messages_author_user_id__nn"/>
+            </column>
+            <column name="text" type="TEXT">
+                <constraints nullable="false" notNullConstraintName="ch__chat_messages_text__nn"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" notNullConstraintName="ch__chat_messages_created_at__nn"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_chat_messages_created_at_id" tableName="chat_messages">
+            <column name="created_at"/>
+            <column name="id"/>
+        </createIndex>
+
+        <addForeignKeyConstraint
+                baseTableName="chat_messages"
+                baseColumnNames="author_user_id"
+                constraintName="fk_chat_messages_author_user"
+                referencedTableName="users"
+                referencedColumnNames="id"/>
+    </changeSet>
+</databaseChangeLog>

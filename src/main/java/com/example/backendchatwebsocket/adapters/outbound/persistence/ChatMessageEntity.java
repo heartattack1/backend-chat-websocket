@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Getter
 @Entity
-@Table(name = "chat_message")
+@Table(name = "chat_messages")
 public class ChatMessageEntity {
 
     @Id
